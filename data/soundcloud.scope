@@ -1,0 +1,14 @@
+[Scope]
+DBusName=com.canonical.Unity.Scope.Music.Soundcloud
+DBusPath=/com/canonical/unity/scope/music/soundcloud
+Icon=
+Keywords=soundcloud;music;track;sound;
+RequiredMetadata=
+OptionalMetadata=
+Type=music
+Name=SoundCloud
+Description=Find SoundCloud tracks and albums
+SearchHint=Search SoundCloud
+
+[Desktop Entry]
+X-Ubuntu-Gettext-Domain=unity-scope-soundcloud
