@@ -32,7 +32,7 @@ BUS_PATH = '/com/canonical/unity/scope/music/soundcloud'
 
 SVG_DIR = '/usr/share/icons/unity-icon-theme/places/svg/'
 CAT_0_ICON = Gio.ThemedIcon.new(SVG_DIR + 'group-music.svg')
-CAT_0_TITLE = _('Categorytitle')
+CAT_0_TITLE = _('Songs')
 
 NO_RESULTS_HINT = _('Sorry, there are no Soundcloud results that match your search.')
 SEARCH_HINT = _('Search Soundcloud')
@@ -47,7 +47,7 @@ class Daemon:
         self.scope.props.search_hint = SEARCH_HINT
         self.scope.search_in_global = True
         cats = []
-        cats.append(Unity.Category.new('cat_0',
+        cats.append(Unity.Category.new(CAT_0_TITLE.lower(),
                                        CAT_0_TITLE,
                                        CAT_0_ICON,
                                        Unity.CategoryRenderer.VERTICAL_TILE))
