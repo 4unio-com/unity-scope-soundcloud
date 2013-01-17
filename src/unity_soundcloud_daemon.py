@@ -95,6 +95,8 @@ class Daemon:
                             r[c]['username'] = ''
                     else:
                         r[c] = ''
+            if r.has_key('stream_url') and r['stream_url'] != '':
+                r['stream_url'] = r['stream_url'] + '?consumer_key=%s' % API_KEY
             results.append(uri=r['permalink_url'],
                            icon_hint=r['artwork_url'],
                            category=0,
