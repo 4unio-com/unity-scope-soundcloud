@@ -14,9 +14,12 @@ class TestSoundcloud(TestCase):
     def test_search(self):
         scope.SEARCH_URI = mock_data['should_pass']
         model = Dee.SequenceModel.new()
-        model.set_schema('s', 's', 'u', 'u', 's', 's', 's', 's')
+        model.set_schema('s', 's', 'u', 'u', 's', 's', 's',
+                         's', 's', 's', 's', 's', 's', 's')
         model.set_column_names('uri', 'icon_hint', 'category', 'result_type',
-                               'mimetype', 'title', 'comment', 'dnd_uri')
+                               'mimetype', 'title', 'comment', 'dnd_uri',
+                               'album', 'artist', 'genre', 'label', 'license',
+                               'stream')
         scope.Daemon.update_results_model(d, searches[0], model)
         self.assertEqual(model[0][0],
                          'http://soundcloud.com/vibecatt/echos')
@@ -38,9 +41,12 @@ class TestSoundcloud(TestCase):
     def test_failing_search(self):
         scope.SEARCH_URI = mock_data['should_fail']
         model = Dee.SequenceModel.new()
-        model.set_schema('s', 's', 'u', 'u', 's', 's', 's', 's')
+        model.set_schema('s', 's', 'u', 'u', 's', 's', 's',
+                         's', 's', 's', 's', 's', 's', 's')
         model.set_column_names('uri', 'icon_hint', 'category', 'result_type',
-                               'mimetype', 'title', 'comment', 'dnd_uri')
+                               'mimetype', 'title', 'comment', 'dnd_uri',
+                               'album', 'artist', 'genre', 'label', 'license',
+                               'stream')
         scope.Daemon.update_results_model(d, searches[0], model)
         self.assertEqual(len(model), 0)
 
