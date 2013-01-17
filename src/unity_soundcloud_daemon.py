@@ -37,6 +37,7 @@ CAT_0_TITLE = _('Categorytitle')
 NO_RESULTS_HINT = _('Sorry, there are no Soundcloud results that match your search.')
 SEARCH_HINT = _('Search Soundcloud')
 SEARCH_URI = 'https://api.soundcloud.com/'
+#FIXME register Canonical API key
 API_KEY = '916e2a744323e1f28e8f1fe50728f86d'
 
 
@@ -54,6 +55,12 @@ class Daemon:
         self.preferences = Unity.PreferencesManager.get_default()
         self.preferences.connect('notify::remote-content-search', self._on_preference_changed)
         self.scope.connect('search-changed', self.on_search_changed)
+        self.scope.props.metadata_schema = {'album': 's',
+                                            'artist': 's'}
+        self.scope.props.optional_metadata_schema = {'genre': 's',
+                                                     'label': 's',
+                                                     'license': 's',
+                                                     'stream': 's'}
         self.scope.export()
 
     def _on_preference_changed(self, *_):
@@ -74,12 +81,18 @@ class Daemon:
 
     def update_results_model(self, search, results):
         checks = ['permalink_url', 'artwork_url',
-                  'title', 'description']
+                  'title', 'description', 'stream_url',
+                  'genre', 'label_name', 'license',
+                  'user']
         for r in self.soundcloud_search(search):
             for c in checks:
-                if not r[c]:
+                if not r.has_key(c) or not r[c]:
                     if c == 'artwork_url':
+                        #FIXME Icon needed
                         r[c] = ''
+                    elif c == 'user':
+                        if not r[c]['username']:
+                            r[c]['username'] = ''
                     else:
                         r[c] = ''
             results.append(uri=r['permalink_url'],
@@ -89,6 +102,12 @@ class Daemon:
                            title=r['title'],
                            comment=r['description'],
                            dnd_uri=r['permalink_url'],
+                           album='',
+                           artist=r['user']['username'],
+                           genre=r['genre'],
+                           label=r['label_name'],
+                           license=r['license'],
+                           stream=r['stream_url'],
                            result_type=Unity.ResultType.DEFAULT)
 
     def soundcloud_search(self, search_string):
