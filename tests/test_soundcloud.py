@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gi.repository import Dee
+from gi.repository import Dee, Gio
 from unittest import TestCase, main
 from src import unity_soundcloud_daemon as scope
 
@@ -20,7 +20,8 @@ class TestSoundcloud(TestCase):
                                'mimetype', 'title', 'comment', 'dnd_uri',
                                'album', 'artist', 'genre', 'label', 'license',
                                'stream')
-        scope.Daemon.update_results_model(d, searches[0], model)
+        c = Gio.Cancellable()
+        scope.Daemon.update_results_model(d, searches[0], model,c)
         self.assertEqual(model[0][0],
                          'http://soundcloud.com/vibecatt/echos')
         self.assertEqual(model[0][1],
@@ -47,7 +48,8 @@ class TestSoundcloud(TestCase):
                                'mimetype', 'title', 'comment', 'dnd_uri',
                                'album', 'artist', 'genre', 'label', 'license',
                                'stream')
-        scope.Daemon.update_results_model(d, searches[0], model)
+        c = Gio.Cancellable()
+        scope.Daemon.update_results_model(d, searches[0], model,c)
         self.assertEqual(len(model), 0)
 
 if __name__ == '__main__':

@@ -66,7 +66,7 @@ class Daemon:
     def _on_preference_changed(self, *_):
         self.scope.queue_search_changed(Unity.SearchType.DEFAULT)
 
-    def on_search_changed(self, scope, search, search_type, *_):
+    def on_search_changed(self, scope, search, search_type, cancellable):
         model = search.props.results_model
         model.clear()
         if self.preferences.props.remote_content_search != Unity.PreferencesManagerRemoteContent.ALL:
@@ -74,12 +74,12 @@ class Daemon:
             return
         search_string = search.props.search_string.strip()
         print ('Search changed to \'%s\'' % search_string)
-        self.update_results_model(search_string, model)
+        self.update_results_model(search_string, model, cancellable)
         search.set_reply_hint('no-results-hint',
                               GLib.Variant.new_string(NO_RESULTS_HINT))
         search.finished()
 
-    def update_results_model(self, search, results):
+    def update_results_model(self, search, results, cancellable):
         checks = ['permalink_url', 'artwork_url',
                   'title', 'description', 'stream_url',
                   'genre', 'label_name', 'license',
@@ -95,6 +95,9 @@ class Daemon:
                             r[c]['username'] = ''
                     else:
                         r[c] = ''
+            if cancellable.is_cancelled():
+                results.clear()
+                return
             if r.has_key('stream_url') and r['stream_url'] != '':
                 r['stream_url'] = r['stream_url'] + '?consumer_key=%s' % API_KEY
             results.append(uri=r['permalink_url'],
