@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-01-20 13:35+0100\n"
+"POT-Creation-Date: 2013-02-13 15:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,20 +17,24 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: ../src/unity_soundcloud_daemon.py:33 ../data/soundcloud.scope.in.h:4
+msgid "Search SoundCloud"
+msgstr ""
+
 #: ../src/unity_soundcloud_daemon.py:35
+msgid "Sorry, there are no SoundCloud tracks that match your search."
+msgstr ""
+
+#: ../src/unity_soundcloud_daemon.py:36
+msgid "Powered by SoundCloud"
+msgstr ""
+
+#: ../src/unity_soundcloud_daemon.py:44
 msgid "Songs"
 msgstr ""
 
-#: ../src/unity_soundcloud_daemon.py:37
-msgid "Sorry, there are no Soundcloud results that match your search."
-msgstr ""
-
-#: ../src/unity_soundcloud_daemon.py:38
-msgid "Search Soundcloud"
-msgstr ""
-
 #: ../data/soundcloud.scope.in.h:1
-msgid "soundcloud;music;track;sound;"
+msgid "soundcloud;music;track;sound;listen;"
 msgstr ""
 
 #: ../data/soundcloud.scope.in.h:2
@@ -39,8 +43,4 @@ msgstr ""
 
 #: ../data/soundcloud.scope.in.h:3
 msgid "Find SoundCloud tracks and albums"
-msgstr ""
-
-#: ../data/soundcloud.scope.in.h:4
-msgid "Search SoundCloud"
 msgstr ""

@@ -1,7 +1,7 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2012 name <email>
+# Copyright (C) 2013 David Callé <davidc@framli.eu>
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License version 3, as published 
 # by the Free Software Foundation.
@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU General Public License along 
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib, GObject, Gio
 from gi.repository import Unity, UnityExtras
-import urllib
-import urllib2
-import simplejson
+from gi.repository import Gio, GLib
+import urllib.parse
+import urllib.request
+import json
 import gettext
 
 APP_NAME = 'unity-scope-soundcloud'
@@ -27,109 +27,205 @@ gettext.bindtextdomain(APP_NAME, LOCAL_PATH)
 gettext.textdomain(APP_NAME)
 _ = gettext.gettext
 
-BUS_NAME = 'com.canonical.Unity.Scope.Music.Soundcloud'
-BUS_PATH = '/com/canonical/unity/scope/music/soundcloud'
-
-SVG_DIR = '/usr/share/icons/unity-icon-theme/places/svg/'
-CAT_0_ICON = Gio.ThemedIcon.new(SVG_DIR + 'group-music.svg')
-CAT_0_TITLE = _('Songs')
-
-NO_RESULTS_HINT = _('Sorry, there are no Soundcloud results that match your search.')
-SEARCH_HINT = _('Search Soundcloud')
+GROUP_NAME = 'com.canonical.Unity.Scope.Music.Soundcloud'
+UNIQUE_PATH = '/com/canonical/unity/scope/music/soundcloud'
 SEARCH_URI = 'https://api.soundcloud.com/'
-#FIXME register Canonical API key
+SEARCH_HINT = _('Search SoundCloud')
 API_KEY = '916e2a744323e1f28e8f1fe50728f86d'
+NO_RESULTS_HINT = _('Sorry, there are no SoundCloud tracks that match your search.')
+PROVIDER_CREDITS = _('Powered by SoundCloud')
+SVG_DIR = '/usr/share/icons/unity-icon-theme/places/svg/'
+PROVIDER_ICON = SVG_DIR+'service-soundcloud.svg'
+DEFAULT_RESULT_ICON = SVG_DIR+'result-music.svg'
+DEFAULT_RESULT_MIMETYPE = 'text/html'
+DEFAULT_RESULT_TYPE = Unity.ResultType.DEFAULT
 
+c1 = {'id'      :'songs',
+      'name'    :_('Songs'),
+      'icon'    :SVG_DIR+'group-songs.svg',
+      'renderer':Unity.CategoryRenderer.VERTICAL_TILE}
+CATEGORIES = [c1]
 
-class Daemon:
-    def __init__ (self):
-        self.scope = Unity.Scope.new (BUS_PATH, 'soundcloud')
-        self.scope.props.search_hint = SEARCH_HINT
-        self.scope.search_in_global = True
-        cats = []
-        cats.append(Unity.Category.new(CAT_0_TITLE.lower(),
-                                       CAT_0_TITLE,
-                                       CAT_0_ICON,
-                                       Unity.CategoryRenderer.VERTICAL_TILE))
-        self.scope.props.categories = cats
-        self.preferences = Unity.PreferencesManager.get_default()
-        self.preferences.connect('notify::remote-content-search', self._on_preference_changed)
-        self.scope.connect('search-changed', self.on_search_changed)
-        self.scope.props.metadata_schema = {'album': 's',
-                                            'artist': 's'}
-        self.scope.props.optional_metadata_schema = {'genre': 's',
-                                                     'label': 's',
-                                                     'license': 's',
-                                                     'stream': 's'}
-        self.scope.export()
+FILTERS = []
 
-    def _on_preference_changed(self, *_):
-        self.scope.queue_search_changed(Unity.SearchType.DEFAULT)
+m1 = {'id'   :'album',
+      'type' :'s',
+      'field':Unity.SchemaFieldType.OPTIONAL}
+m2 = {'id'   :'artist',
+      'type' :'s',
+      'field':Unity.SchemaFieldType.OPTIONAL}
+m3 = {'id'   :'genre',
+      'type' :'s',
+      'field':Unity.SchemaFieldType.OPTIONAL}
+m4 = {'id'   :'label',
+      'type' :'s',
+      'field':Unity.SchemaFieldType.OPTIONAL}
+m5 = {'id'   :'license',
+      'type' :'s',
+      'field':Unity.SchemaFieldType.OPTIONAL}
+m6 = {'id'   :'stream',
+      'type' :'s',
+      'field':Unity.SchemaFieldType.OPTIONAL}
+m7 = {'id'   :'duration',
+      'type' :'s',
+      'field':Unity.SchemaFieldType.OPTIONAL}
+EXTRA_METADATA = [m1, m2, m3, m4, m5, m6, m7]
 
-    def on_search_changed(self, scope, search, search_type, cancellable):
-        model = search.props.results_model
-        model.clear()
-        if self.preferences.props.remote_content_search != Unity.PreferencesManagerRemoteContent.ALL:
-            search.finished()
-            return
-        search_string = search.props.search_string.strip()
-        print ('Search changed to \'%s\'' % search_string)
-        self.update_results_model(search_string, model, cancellable)
-        search.set_reply_hint('no-results-hint',
-                              GLib.Variant.new_string(NO_RESULTS_HINT))
-        search.finished()
-
-    def update_results_model(self, search, results, cancellable):
-        checks = ['permalink_url', 'artwork_url',
-                  'title', 'description', 'stream_url',
-                  'genre', 'label_name', 'license',
-                  'user']
-        for r in self.soundcloud_search(search):
-            for c in checks:
-                if not r.has_key(c) or not r[c]:
-                    if c == 'artwork_url':
-                        #FIXME Icon needed
-                        r[c] = ''
-                    elif c == 'user':
-                        if not r[c]['username']:
-                            r[c]['username'] = ''
-                    else:
-                        r[c] = ''
-            if cancellable.is_cancelled():
-                results.clear()
-                return
-            if r.has_key('stream_url') and r['stream_url'] != '':
+def search(search, filters):
+    '''
+    Any search method returning results as a list of tuples.
+    Available tuple fields:
+    uri (string)
+    icon (string)
+    title (string)
+    comment (string)
+    dnd_uri (string)
+    mimetype (string)
+    category (int)
+    result_type (Unity ResultType)
+    extras metadata fields (variant)
+    '''
+    results = []
+    if not search:
+        return results
+    search = urllib.parse.quote(search)
+    uri = "%stracks.json?consumer_key=%s&q=%s" % (SEARCH_URI, API_KEY, search)
+    print(uri)
+    data = []
+    try:
+        response = urllib.request.urlopen(uri).read()
+        data = json.loads(response.decode('utf8'))
+    except Exception as error:
+        print(error)
+    checks = ['permalink_url', 'artwork_url',
+              'title', 'description', 'stream_url',
+              'genre', 'label_name', 'license',
+              'user', 'duration']
+    for r in data:
+        for c in checks:
+            if not c in r or not r[c]:
+                if c == 'artwork_url':
+                    r[c] = r['user']['avatar_url']
+                elif c == 'user':
+                    if not r[c]['username']:
+                        r[c]['username'] = ''
+                else:
+                    r[c] = ''
+        if 'stream_url' in r and r['stream_url'] != '':
                 r['stream_url'] = r['stream_url'] + '?consumer_key=%s' % API_KEY
-            results.append(uri=r['permalink_url'],
-                           icon_hint=r['artwork_url'],
-                           category=0,
-                           mimetype='text/html',
-                           title=r['title'],
-                           comment=r['description'],
-                           dnd_uri=r['permalink_url'],
-                           album='',
-                           artist=r['user']['username'],
-                           genre=r['genre'],
-                           label=r['label_name'],
-                           license=r['license'],
-                           stream=r['stream_url'],
-                           result_type=Unity.ResultType.DEFAULT)
+        results.append({'uri':r['permalink_url'],
+                       'icon':r['artwork_url'],
+                       'title':r['title'],
+                       'comment':r['description'],
+                       'album':GLib.Variant('s',''),
+                       'artist':GLib.Variant('s',r['user']['username']),
+                       'genre':GLib.Variant('s',r['genre']),
+                       'label':GLib.Variant('s',r['label_name']),
+                       'license':GLib.Variant('s',r['license']),
+                       'stream':GLib.Variant('s',r['stream_url']),
+                       'duration':GLib.Variant('s',str(r['duration']))})
+    return results
 
-    def soundcloud_search(self, search_string):
-        query = urllib.quote(search_string)
-        data = []
-        if query:
-            uri = ("%stracks.json?consumer_key=%s&q=%s" % (SEARCH_URI, API_KEY, query))
-            print uri
-            try:
-                response = urllib2.urlopen(uri).read()
-                data = simplejson.loads(response)
-            except Exception as error:
-                print "SoundCloud error : ", error
-        return data
 
-if __name__ == '__main__':
-    daemon = UnityExtras.dbus_own_name (BUS_NAME, Daemon, None)
-    if daemon:
-        GLib.unix_signal_add(0, 2, lambda x: daemon.quit(), None)
-        daemon.run([])
+# Classes below this point establish communication
+# with Unity, you probably shouldn't modify them.
+
+
+class MySearch (Unity.ScopeSearchBase):
+    def __init__(self, search_context):
+        super (MySearch, self).__init__()
+        self.set_search_context (search_context)
+
+    def do_run (self):
+        '''
+        Adds results to the model
+        '''
+        try:
+            result_set = self.search_context.result_set
+            for i in search(self.search_context.search_query,
+                            self.search_context.filter_state):
+                if not 'uri' in i or not i['uri'] or i['uri'] == '':
+                    continue
+                if not 'icon' in i or not i['icon'] or i['icon'] == '':
+                    i['icon'] = DEFAULT_RESULT_ICON
+                if not 'mimetype' in i or not i['mimetype'] or i['mimetype'] == '':
+                    i['mimetype'] = DEFAULT_RESULT_MIMETYPE
+                if not 'result_type' in i or not i['result_type'] or i['result_type'] == '':
+                    i['result_type'] = DEFAULT_RESULT_TYPE
+                if not 'category' in i or not i['category'] or i['category'] == '':
+                    i['category'] = 0
+                if not 'title' in i or not i['title']:
+                    i['title'] = ''
+                if not 'comment' in i or not i['comment']:
+                    i['comment'] = ''
+                if not 'dnd_uri' in i or not i['dnd_uri'] or i['dnd_uri'] == '':
+                    i['dnd_uri'] = i['uri']
+                i['metadata'] = {}
+                if EXTRA_METADATA:
+                    for e in i:
+                        for m in EXTRA_METADATA:
+                            if m['id'] == e:
+                                i['metadata'][e] = i[e]
+                i['metadata']['provider_credits'] = GLib.Variant('s', PROVIDER_CREDITS)
+                result = Unity.ScopeResult.create(str(i['uri']), str(i['icon']),
+                                                  i['category'], i['result_type'],
+                                                  str(i['mimetype']), str(i['title']),
+                                                  str(i['comment']), str(i['dnd_uri']),
+                                                  i['metadata'])
+                result_set.add_result(result)
+        except Exception as error:
+            print (error)
+
+class Scope (Unity.AbstractScope):
+    def __init__(self):
+        Unity.AbstractScope.__init__(self)
+
+    def do_get_search_hint (self):
+        return SEARCH_HINT
+
+    def do_get_schema (self):
+        '''
+        Adds specific metadata fields
+        '''
+        schema = Unity.Schema.new ()
+        if EXTRA_METADATA:
+            for m in EXTRA_METADATA:
+                schema.add_field(m['id'], m['type'], m['field'])
+        #FIXME should be REQUIRED for credits
+        schema.add_field('provider_credits', 's', Unity.SchemaFieldType.OPTIONAL)
+        return schema
+
+    def do_get_categories (self):
+        '''
+        Adds categories
+        '''
+        cs = Unity.CategorySet.new ()
+        if CATEGORIES:
+            for c in CATEGORIES:
+                cat = Unity.Category.new (c['id'], c['name'],
+                                          Gio.ThemedIcon.new(c['icon']),
+                                          c['renderer'])
+                cs.add (cat)
+        return cs
+
+    def do_get_filters (self):
+        '''
+        Adds filters
+        '''
+        fs = Unity.FilterSet.new ()
+#        if FILTERS:
+#            
+        return fs
+
+    def do_get_group_name (self):
+        return GROUP_NAME
+
+    def do_get_unique_name (self):
+        return UNIQUE_PATH
+
+    def do_create_search_for_query (self, search_context):
+        se = MySearch (search_context)
+        return se
+
+def load_scope():
+    return Scope()
