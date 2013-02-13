@@ -1,0 +1,10 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Source: https://launchpad.net/unity-scope-soundcloud
+Upstream-Name: unity-scope-soundcloud
+Upstream-Contact: David Callé <davidc@framli.eu>
+
+Files: *
+Copyright: 2013 David Callé
+License: GPL-3
+ On Debian systems, the complete text of the GNU General
+ Public License version 3 can be found in '/usr/share/common-licenses/GPL-3'.
