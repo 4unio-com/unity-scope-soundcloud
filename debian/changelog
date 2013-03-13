@@ -1,5 +1,8 @@
-unity-scope-soundcloud (0.1) UNRELEASED; urgency=low
+unity-scope-soundcloud (0.1-0ubuntu1) UNRELEASED; urgency=low
 
   * Initial release
+
+  [ Sebastien Bacher ]
+  * bump libunity requirements in debian/control, small packaging fixes
 
  -- David Callé <davidc@framli.eu>  Wed, 13 Feb 2013 15:25:20 +0100
