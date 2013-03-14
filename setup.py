@@ -12,7 +12,7 @@ setup(name='unity-scope-soundcloud',
       data_files=[
     ('share/dbus-1/services', ['data/unity-scope-soundcloud.service']),
     ('share/icons/unity-icon-theme/places/svg', ['data/icons/service-soundcloud.svg']),
-    ('lib/ubuntu-scopes/soundcloud', ['src/unity_soundcloud_daemon.py']),
-    ('lib/ubuntu-scopes/soundcloud', ['src/__init__.py']),
+    ('share/unity-scopes/soundcloud', ['src/unity_soundcloud_daemon.py']),
+    ('share/unity-scopes/soundcloud', ['src/__init__.py']),
     ], cmdclass={'build':  build_extra.build_extra,
                  'build_i18n': build_i18n.build_i18n,})
