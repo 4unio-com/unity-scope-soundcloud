@@ -27,6 +27,6 @@ Depends: ${misc:Depends},
          gir1.2-dee-1.0,
          unity-scopes-runner,
          gir1.2-glib-2.0
-Description: Soundcloud scope for Unity
+Description: SoundCloud scope for Unity
  This package contains the "soundcloud" scope which allows Unity
- to search for soundcloud content.
+ to search for SoundCloud content.
