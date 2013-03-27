@@ -174,8 +174,9 @@ class Preview (Unity.ResultPreviewer):
         description = self.result.comment.strip()
         image = self.result.icon_hint.replace('large.jpg', 'original.jpg')
         preview = Unity.MusicPreview.new(title, description, None)
-        t = Unity.TrackMetadata.full(stream, 1, title, author, '', duration / 1000)
-        preview.add_track(t)
+        if stream != '':
+            t = Unity.TrackMetadata.full(stream, 1, title, author, '', duration / 1000)
+            preview.add_track(t)
         preview.props.subtitle = _("By ") + author
         preview.props.image_source_uri = image
         icon = Gio.FileIcon.new (Gio.file_new_for_path(PROVIDER_ICON))
