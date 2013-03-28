@@ -177,7 +177,7 @@ class Preview (Unity.ResultPreviewer):
         if stream != '':
             t = Unity.TrackMetadata.full(stream, 1, title, author, '', duration / 1000)
             preview.add_track(t)
-        preview.props.subtitle = _("By ") + author
+        preview.props.subtitle = author
         preview.props.image_source_uri = image
         icon = Gio.FileIcon.new (Gio.file_new_for_path(PROVIDER_ICON))
         view_action = Unity.PreviewAction.new("view", _("SoundCloud"), icon)
