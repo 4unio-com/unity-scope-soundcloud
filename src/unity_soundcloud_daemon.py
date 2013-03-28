@@ -89,7 +89,7 @@ def search(search, filters):
     if not search:
         return results
     search = urllib.parse.quote(search)
-    uri = "%stracks.json?consumer_key=%s&q=%s" % (SEARCH_URI, API_KEY, search)
+    uri = "%stracks.json?consumer_key=%s&q=%s&order=hotness" % (SEARCH_URI, API_KEY, search)
     print(uri)
     data = []
     try:
