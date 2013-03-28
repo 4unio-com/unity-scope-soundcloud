@@ -89,7 +89,7 @@ def search(search, filters):
     if not search:
         return results
     search = urllib.parse.quote(search)
-    uri = "%stracks.json?consumer_key=%s&q=%s" % (SEARCH_URI, API_KEY, search)
+    uri = "%stracks.json?consumer_key=%s&q=%s&order=hotness&limit=30" % (SEARCH_URI, API_KEY, search)
     print(uri)
     data = []
     try:
@@ -160,21 +160,29 @@ class MySearch (Unity.ScopeSearchBase):
                     i['comment'] = ''
                 if not 'dnd_uri' in i or not i['dnd_uri'] or i['dnd_uri'] == '':
                     i['dnd_uri'] = i['uri']
-                i['metadata'] = {}
-                if EXTRA_METADATA:
-                    for e in i:
-                        for m in EXTRA_METADATA:
-                            if m['id'] == e:
-                                i['metadata'][e] = i[e]
-                i['metadata']['provider_credits'] = GLib.Variant('s', PROVIDER_CREDITS)
-                result = Unity.ScopeResult.create(str(i['uri']), str(i['icon']),
-                                                  i['category'], i['result_type'],
-                                                  str(i['mimetype']), str(i['title']),
-                                                  str(i['comment']), str(i['dnd_uri']),
-                                                  i['metadata'])
-                result_set.add_result(result)
+                result_set.add_result(**i)
         except Exception as error:
             print (error)
+
+class Preview (Unity.ResultPreviewer):
+
+    def do_run(self):
+        title = self.result.title.strip()
+        stream = self.result.metadata['stream'].get_string()
+        duration = int(self.result.metadata['duration'].get_string())
+        author = self.result.metadata['artist'].get_string()
+        description = self.result.comment.strip()
+        image = self.result.icon_hint.replace('large.jpg', 'original.jpg')
+        preview = Unity.MusicPreview.new(title, description, None)
+        if stream != '':
+            t = Unity.TrackMetadata.full(stream, 1, title, author, '', duration / 1000)
+            preview.add_track(t)
+        preview.props.subtitle = author
+        preview.props.image_source_uri = image
+        icon = Gio.FileIcon.new (Gio.file_new_for_path(PROVIDER_ICON))
+        view_action = Unity.PreviewAction.new("view", _("SoundCloud"), icon)
+        preview.add_action(view_action)
+        return preview
 
 class Scope (Unity.AbstractScope):
     def __init__(self):
@@ -226,6 +234,12 @@ class Scope (Unity.AbstractScope):
     def do_create_search_for_query (self, search_context):
         se = MySearch (search_context)
         return se
+
+    def do_create_previewer(self, result, metadata):
+        rp = Preview()
+        rp.set_scope_result(result)
+        rp.set_search_metadata(metadata)
+        return rp
 
 def load_scope():
     return Scope()
