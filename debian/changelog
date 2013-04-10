@@ -1,4 +1,4 @@
-unity-scope-soundcloud (0.1-0ubuntu1) UNRELEASED; urgency=low
+unity-scope-soundcloud (0.1daily13.04.10ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
 
   * Initial release
 
@@ -8,4 +8,8 @@ unity-scope-soundcloud (0.1-0ubuntu1) UNRELEASED; urgency=low
   [ Didier Roche ]
   * Automatic snapshot from revision 1 (boostrap)
 
- -- David Callé <davidc@framli.eu>  Wed, 13 Feb 2013 15:25:20 +0100
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 24 (ubuntu-unity/experimental-
+    certified)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 10 Apr 2013 07:33:57 +0000
