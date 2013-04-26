@@ -9,7 +9,7 @@ Loader=/usr/share/unity-scopes/soundcloud/unity_soundcloud_daemon.py
 RemoteContent=true
 Type=music
 _Name=SoundCloud
-_Description=This is an Ubuntu search plugin that enables information from SoundCloud to be searched and displayed in the Dash underneath the Music header. If you do not wish to search this content source, you can disable this search plugin
+_Description=This is an Ubuntu search plugin that enables information from SoundCloud to be searched and displayed in the Dash underneath the Music header. If you do not wish to search this content source, you can disable this search plugin.
 _SearchHint=Search SoundCloud
 
 [Desktop Entry]
