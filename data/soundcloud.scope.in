@@ -1,7 +1,7 @@
 [Scope]
 DBusName=com.canonical.Unity.Scope.Music.Soundcloud
 DBusPath=/com/canonical/unity/scope/music/soundcloud
-Icon=
+Icon=/usr/share/icons/unity-icon-theme/places/svg/service-soundcloud.svg
 _Keywords=soundcloud;music;track;sound;listen;
 RequiredMetadata=album[s];artist[s];
 OptionalMetadata=genre[s];label[s];license[s];stream[s];
@@ -9,7 +9,7 @@ Loader=/usr/share/unity-scopes/soundcloud/unity_soundcloud_daemon.py
 RemoteContent=true
 Type=music
 _Name=SoundCloud
-_Description=Find SoundCloud tracks and albums
+_Description=This is an Ubuntu search plugin that enables information from SoundCloud to be searched and displayed in the Dash underneath the Music header. If you do not wish to search this content source, you can disable this search plugin.
 _SearchHint=Search SoundCloud
 
 [Desktop Entry]
