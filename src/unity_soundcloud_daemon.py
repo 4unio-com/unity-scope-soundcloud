@@ -50,10 +50,10 @@ FILTERS = []
 
 m1 = {'id'   :'album',
       'type' :'s',
-      'field':Unity.SchemaFieldType.OPTIONAL}
+      'field':Unity.SchemaFieldType.REQUIRED}
 m2 = {'id'   :'artist',
       'type' :'s',
-      'field':Unity.SchemaFieldType.OPTIONAL}
+      'field':Unity.SchemaFieldType.REQUIRED}
 m3 = {'id'   :'genre',
       'type' :'s',
       'field':Unity.SchemaFieldType.OPTIONAL}
