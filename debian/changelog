@@ -1,3 +1,10 @@
+unity-scope-soundcloud (0.1daily13.05.07ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
+
+  * Automatic snapshot from revision 27 (ubuntu-unity/experimental-
+    certified)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 07 May 2013 07:23:38 +0000
+
 unity-scope-soundcloud (0.1daily13.04.10ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
 
   * Initial release
