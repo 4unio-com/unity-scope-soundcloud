@@ -2,24 +2,25 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2013 David Callé <davidc@framli.eu>
-# This program is free software: you can redistribute it and/or modify it 
-# under the terms of the GNU General Public License version 3, as published 
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
-# 
-# This program is distributed in the hope that it will be useful, but 
-# WITHOUT ANY WARRANTY; without even the implied warranties of 
-# MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR 
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranties of
+# MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR
 # PURPOSE.  See the GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License along 
+#
+# You should have received a copy of the GNU General Public License along
 # with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Unity, UnityExtras
+from gi.repository import Unity
 from gi.repository import Gio, GLib
 import urllib.parse
 import urllib.request
 import json
 import gettext
+import logging
 
 APP_NAME = 'unity-scope-soundcloud'
 LOCAL_PATH = '/usr/share/locale/'
@@ -71,6 +72,8 @@ m7 = {'id'   :'duration',
       'field':Unity.SchemaFieldType.OPTIONAL}
 EXTRA_METADATA = [m1, m2, m3, m4, m5, m6, m7]
 
+logger = logging.getLogger("unity.scope.soundcloud")
+
 def search(search, filters):
     '''
     Any search method returning results as a list of tuples.
@@ -90,13 +93,13 @@ def search(search, filters):
         return results
     search = urllib.parse.quote(search)
     uri = "%stracks.json?consumer_key=%s&q=%s&order=hotness&limit=30" % (SEARCH_URI, API_KEY, search)
-    print(uri)
+    logger.debug("Request: %s", uri)
     data = []
     try:
         response = urllib.request.urlopen(uri).read()
         data = json.loads(response.decode('utf8'))
-    except Exception as error:
-        print(error)
+    except Exception:
+        logger.exception("Error while fetching: %r", uri)
     checks = ['permalink_url', 'artwork_url',
               'title', 'description', 'stream_url',
               'genre', 'label_name', 'license',
@@ -161,8 +164,8 @@ class MySearch (Unity.ScopeSearchBase):
                 if not 'dnd_uri' in i or not i['dnd_uri'] or i['dnd_uri'] == '':
                     i['dnd_uri'] = i['uri']
                 result_set.add_result(**i)
-        except Exception as error:
-            print (error)
+        except Exception:
+            logger.exception("Error while building result set.")
 
 class Preview (Unity.ResultPreviewer):
 
@@ -222,7 +225,7 @@ class Scope (Unity.AbstractScope):
         '''
         fs = Unity.FilterSet.new ()
 #        if FILTERS:
-#            
+#
         return fs
 
     def do_get_group_name (self):
