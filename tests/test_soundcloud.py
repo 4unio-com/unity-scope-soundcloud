@@ -24,7 +24,7 @@ class ScopeTestCase(TestCase):
     def perform_query(self, query, filter_set = Unity.FilterSet.new()):
         result_set = ResultSet()
         ctx = Unity.SearchContext.create(query, 0, filter_set,
-                                         None, result_set, None)
+                                         {}, result_set, None)
         s = self.scope.create_search_for_query(ctx)
         s.run()
         return result_set
