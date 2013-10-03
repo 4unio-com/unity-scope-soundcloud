@@ -70,7 +70,10 @@ m6 = {'id'   :'stream',
 m7 = {'id'   :'duration',
       'type' :'s',
       'field':Unity.SchemaFieldType.OPTIONAL}
-EXTRA_METADATA = [m1, m2, m3, m4, m5, m6, m7]
+m8 = {'id'   :'description',
+      'type' :'s',
+      'field':Unity.SchemaFieldType.OPTIONAL}
+EXTRA_METADATA = [m1, m2, m3, m4, m5, m6, m7, m8]
 
 logger = logging.getLogger("unity.scope.soundcloud")
 
@@ -119,7 +122,8 @@ def search(search, filters):
         results.append({'uri':r['permalink_url'],
                        'icon':r['artwork_url'],
                        'title':r['title'],
-                       'comment':r['description'],
+                       'comment':r['user']['username'],
+                       'description':r['description'],
                        'album':GLib.Variant('s',''),
                        'artist':GLib.Variant('s',r['user']['username']),
                        'genre':GLib.Variant('s',r['genre']),
@@ -174,7 +178,7 @@ class Preview (Unity.ResultPreviewer):
         stream = self.result.metadata['stream'].get_string()
         duration = int(self.result.metadata['duration'].get_string())
         author = self.result.metadata['artist'].get_string()
-        description = self.result.comment.strip()
+        description = self.result.metadata['description'].get_string()
         image = self.result.icon_hint.replace('large.jpg', 'original.jpg')
         preview = Unity.MusicPreview.new(title, description, None)
         if stream != '':
