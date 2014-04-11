@@ -109,6 +109,7 @@ func (sc *SoundCloudScope) Search(query string, reply *scopes.SearchReply, cance
 		result.Set("duration", track.Duration)
 		result.Set("username", track.User.Username)
 		result.Set("label", track.LabelName)
+		result.Set("description", track.Description)
 		result.Set("stream-url", track.StreamUrl)
 		result.Set("purchase-url", track.PurchaseUrl)
 		result.Set("video-url", track.VideoUrl)
@@ -142,8 +143,8 @@ func (sc *SoundCloudScope) Preview(result *scopes.Result, reply *scopes.PreviewR
 	tracks := scopes.NewPreviewWidget("tracks", "audio")
 	tracks.AddAttributeValue("tracks", []trackInfo{trackInfo{
 		Title: title.(string),
-		Length: duration.(int),
-		Source: streamUrl.(string),
+		Length: int(duration.(float64) / 1000),
+		Source: streamUrl.(string) + "?client_id=" + sc.ClientId,
 	}})
 
 	actions := scopes.NewPreviewWidget("actions", "actions")
