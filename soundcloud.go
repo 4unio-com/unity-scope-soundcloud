@@ -37,6 +37,7 @@ type actionInfo struct {
 	Id    string `json:"id"`
 	Label string `json:"label"`
 	Icon  string `json:"icon,omitempty"`
+	Uri   string `json:"uri,omitempty"`
 }
 
 type user struct {
@@ -148,11 +149,20 @@ func (sc *SoundCloudScope) Preview(result *scopes.Result, reply *scopes.PreviewR
 		Source: streamUrl + "?client_id=" + sc.ClientId,
 	}})
 
+	buttons := []actionInfo{
+		actionInfo{Id: "view", Label: "View"},
+	}
+	var purchaseUrl string
+	if err := result.Get("purchase-url", &purchaseUrl); err == nil && purchaseUrl != "" {
+		buttons = append(buttons, actionInfo{Id: "buy", Label: "Buy", Uri: purchaseUrl})
+	}
+	var videoUrl string
+	if err := result.Get("video-url", &videoUrl); err == nil && videoUrl != "" {
+		buttons = append(buttons, actionInfo{Id: "video", Label: "Watch video", Uri: videoUrl})
+	}
+
 	actions := scopes.NewPreviewWidget("actions", "actions")
-	actions.AddAttributeValue("actions", []actionInfo{actionInfo{
-		Id: "view",
-		Label: "SoundCloud",
-	}})
+	actions.AddAttributeValue("actions", buttons)
 
 	description := scopes.NewPreviewWidget("description", "text")
 	description.AddAttributeMapping("text", "description")
