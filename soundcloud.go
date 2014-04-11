@@ -128,23 +128,24 @@ func (sc *SoundCloudScope) Preview(result *scopes.Result, reply *scopes.PreviewR
 	art := scopes.NewPreviewWidget("art", "image")
 	art.AddAttributeMapping("source", "art")
 
-	title, err := result.Get("title")
-	if err != nil {
+	var (
+		title, streamUrl string
+		duration int
+	)
+	if err := result.Get("title", &title); err != nil {
 		return err
 	}
-	duration, err := result.Get("duration")
-	if err != nil {
+	if err := result.Get("duration", &duration); err != nil {
 		return err
 	}
-	streamUrl, err := result.Get("stream-url")
-	if err != nil {
+	if err := result.Get("stream-url", &streamUrl); err != nil {
 		return err
 	}
 	tracks := scopes.NewPreviewWidget("tracks", "audio")
 	tracks.AddAttributeValue("tracks", []trackInfo{trackInfo{
-		Title: title.(string),
-		Length: int(duration.(float64) / 1000),
-		Source: streamUrl.(string) + "?client_id=" + sc.ClientId,
+		Title: title,
+		Length: duration / 1000,
+		Source: streamUrl + "?client_id=" + sc.ClientId,
 	}})
 
 	actions := scopes.NewPreviewWidget("actions", "actions")
