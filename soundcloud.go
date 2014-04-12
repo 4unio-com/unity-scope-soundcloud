@@ -9,6 +9,8 @@ import (
 	"launchpad.net/go-unityscopes/v1"
 )
 
+const providerIcon = "/usr/share/icons/unity-icon-theme/places/svg/service-soundcloud.svg"
+
 const searchCategoryTemplate = `{
   "schema-version": 1,
   "template": {
@@ -150,7 +152,7 @@ func (sc *SoundCloudScope) Preview(result *scopes.Result, reply *scopes.PreviewR
 	}})
 
 	buttons := []actionInfo{
-		actionInfo{Id: "view", Label: "View"},
+		actionInfo{Id: "play", Label: "Play", Icon: providerIcon},
 	}
 	var purchaseUrl string
 	if err := result.Get("purchase-url", &purchaseUrl); err == nil && purchaseUrl != "" {
