@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service id="soundcloud">
+  <type>sharing</type>
+  <name>Soundcloud Music</name>
+  <icon>soundcloud</icon>
+  <provider>soundcloud</provider>
+  <translations>account-plugins</translations>
+</service>
