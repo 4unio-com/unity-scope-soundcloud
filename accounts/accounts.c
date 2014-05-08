@@ -13,14 +13,21 @@ struct _AuthContext {
     AgAccountService *account_service;
     AgAuthData *auth_data;
     SignonAuthSession *session;
+
+    GVariant *auth_params;
+    GVariant *session_data;
 };
 
-static void login_cb(GObject *source, GAsyncResult *result, gpointer user_data) {
+static void login_cb(GObject *source, GAsyncResult *result, void *user_data) {
     SignonAuthSession *session = (SignonAuthSession *)source;
     AuthContext *ctx = (AuthContext *)user_data;
 
     GError *error = NULL;
-    GVariant *session_data = signon_auth_session_process_finish(session, result, &error);
+    ctx->session_data = signon_auth_session_process_finish(session, result, &error);
+
+    g_object_unref(ctx->session);
+    ctx->session = NULL;
+
     if (error != NULL) {
         fprintf(stderr, "Authentication failed: %s\n", error->message);
         g_error_free(error);
@@ -28,13 +35,12 @@ static void login_cb(GObject *source, GAsyncResult *result, gpointer user_data) 
     }
 
     const char *access_token = NULL;
-    g_variant_lookup(session_data, "AccesToken", "&s", &access_token);
-    if (access_token != NULL) {
+    if (g_variant_lookup(ctx->session_data, "AccessToken", "&s", &access_token)) {
         printf("Got access token: %s\n", access_token);
     }
 }
 
-static void login(AuthContext *ctx) {
+static void login_service(AuthContext *ctx) {
     ctx->auth_data = ag_account_service_get_auth_data(ctx->account_service);
 
     GError *error = NULL;
@@ -49,33 +55,55 @@ static void login(AuthContext *ctx) {
 
     GVariantBuilder builder;
     g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
-#if 0
     g_variant_builder_add(
         &builder, "{sv}",
         SIGNON_SESSION_DATA_UI_POLICY,
         g_variant_new_int32(SIGNON_POLICY_NO_USER_INTERACTION));
-#endif
+
+    ctx->auth_params = g_variant_ref_sink(
+        ag_auth_data_get_login_parameters(
+            ctx->auth_data, g_variant_builder_end(&builder)));
 
     signon_auth_session_process_async(
         ctx->session,
-        ag_auth_data_get_login_parameters(
-            ctx->auth_data, g_variant_builder_end(&builder)),
+        ctx->auth_params,
         ag_auth_data_get_mechanism(ctx->auth_data),
         NULL, /* cancellable */
         login_cb, ctx);
 }
 
-AuthContext *watch_for_service(const char *service_name) {
-    AuthContext *ctx = g_new0(AuthContext, 1);
-    ctx->manager = ag_manager_new();
-    ctx->service_name = g_strdup(service_name);
+static void logout_service(AuthContext *ctx) {
+    if (ctx->session_data) {
+        g_variant_unref(ctx->session_data);
+        ctx->session_data = NULL;
+    }
+    if (ctx->auth_params) {
+        g_variant_unref(ctx->auth_params);
+        ctx->auth_params = NULL;
+    }
+    if (ctx->session) {
+        signon_auth_session_cancel(ctx->session);
+        g_object_unref(ctx->session);
+        ctx->session = NULL;
+    }
+    if (ctx->auth_data) {
+        g_object_unref(ctx->auth_data);
+        ctx->auth_data = NULL;
+    }
+    if (ctx->account_service) {
+        g_object_unref(ctx->account_service);
+        ctx->account_service = NULL;
+    }
+    printf("logged out\n");
+}
 
+static void lookup_account_service(AuthContext *ctx) {
     GList *account_services = ag_manager_get_enabled_account_services(ctx->manager);
     GList *tmp;
     for (tmp = account_services; tmp != NULL; tmp = tmp->next) {
         AgAccountService *acct_svc = AG_ACCOUNT_SERVICE(tmp->data);
         AgService *service = ag_account_service_get_service(acct_svc);
-        if (!strcmp(service_name, ag_service_get_name(service))) {
+        if (!strcmp(ctx->service_name, ag_service_get_name(service))) {
             ctx->account_service = g_object_ref(acct_svc);
             break;
         }
@@ -84,8 +112,30 @@ AuthContext *watch_for_service(const char *service_name) {
     g_list_free(account_services);
 
     if (ctx->account_service != NULL) {
-        login(ctx);
+        login_service(ctx);
     }
+}
+
+static void account_enabled_cb(AgManager *manager, guint account_id, void *user_data) {
+    AuthContext *ctx = (AuthContext *)user_data;
+
+    printf("enabled_cb account_id=%u\n", account_id);
+
+    if (ctx->account_service != NULL &&
+        !ag_account_service_get_enabled(ctx->account_service)) {
+        logout_service(ctx);
+    }
+    lookup_account_service(ctx);
+}
+
+AuthContext *watch_for_service(const char *service_name) {
+    AuthContext *ctx = g_new0(AuthContext, 1);
+    ctx->manager = ag_manager_new();
+    ctx->service_name = g_strdup(service_name);
+
+    lookup_account_service(ctx);
+    g_signal_connect(ctx->manager, "enabled-event",
+                     G_CALLBACK(account_enabled_cb), ctx);
 
     return ctx;
 }
