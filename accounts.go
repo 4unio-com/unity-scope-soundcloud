@@ -15,7 +15,7 @@ import "unsafe"
 type AuthData struct {
 	ClientId     string
 	ClientSecret string
-	AuthToken    string
+	AccessToken    string
 }
 
 var (
@@ -39,7 +39,7 @@ func WatchForService(serviceName string) <-chan AuthData {
 }
 
 //export authLogin
-func authLogin(user_data unsafe.Pointer, clientId *C.char, clientSecret *C.char, authToken *C.char) {
+func authLogin(user_data unsafe.Pointer, clientId *C.char, clientSecret *C.char, accessToken *C.char) {
 	ctx := (*C.AuthContext)(user_data)
 	ch := authChannels[ctx]
 	if ch == nil {
@@ -54,8 +54,8 @@ func authLogin(user_data unsafe.Pointer, clientId *C.char, clientSecret *C.char,
 	if clientSecret != nil {
 		data.ClientSecret = C.GoString(clientSecret)
 	}
-	if authToken != nil {
-		data.AuthToken = C.GoString(authToken)
+	if accessToken != nil {
+		data.AccessToken = C.GoString(accessToken)
 	}
 	ch <- data
 }

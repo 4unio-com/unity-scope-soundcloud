@@ -25,8 +25,9 @@ const searchCategoryTemplate = `{
 }`
 
 type SoundCloudScope struct {
-	BaseURI string
-	ClientId string
+	BaseURI     string
+	ClientId    string
+	AccessToken string
 }
 
 type trackInfo struct {
@@ -91,12 +92,21 @@ func (sc *SoundCloudScope) get(resource string, params map[string]string, result
 
 func (sc *SoundCloudScope) Search(query string, reply *scopes.SearchReply, cancelled <-chan bool) error {
 	// We currently don't have any surfacing results
-	if query == "" {
-		return nil
-	}
 	var tracks []track
-	if err := sc.get("/tracks", map[string]string{"q": query, "limit": "30", "order": "hotness"}, &tracks); err != nil {
-		return err
+	if query == "" {
+		if sc.AccessToken != "" {
+			if err := sc.get("/me/favorites", map[string]string{"limit": "30", "order": "hotness", "oauth_token": sc.AccessToken}, &tracks); err != nil {
+				return err
+			}
+		} else {
+			if err := sc.get("/tracks", map[string]string{"limit": "30", "order": "hotness"}, &tracks); err != nil {
+				return err
+			}
+		}
+	} else {
+		if err := sc.get("/tracks", map[string]string{"q": query, "limit": "30", "order": "hotness"}, &tracks); err != nil {
+			return err
+		}
 	}
 
 	cat := reply.RegisterCategory("soundcloud", "SoundCloud", "", searchCategoryTemplate)
@@ -176,7 +186,15 @@ func main() {
 	log.Println("Starting soundcloud scope")
 	scope := &SoundCloudScope{
 		BaseURI: "https://api.soundcloud.com",
-		ClientId: "398e83f17ec3c5cf945f04772de9f400",
+		ClientId: "eadbbc8380aa72be1412e2abe5f8e4ca",
 	}
+
+	go func() {
+		for data := range WatchForService("soundcloud") {
+			log.Printf("Logged in: %#v\n", data)
+			scope.AccessToken = data.AccessToken
+		}
+	}()
+
 	scopes.Run("soundcloud", scope)
 }
