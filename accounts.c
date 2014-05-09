@@ -1,3 +1,4 @@
+#include "_cgo_export.h"
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -34,10 +35,14 @@ static void login_cb(GObject *source, GAsyncResult *result, void *user_data) {
         return;
     }
 
-    const char *access_token = NULL;
-    if (g_variant_lookup(ctx->session_data, "AccessToken", "&s", &access_token)) {
-        printf("Got access token: %s\n", access_token);
-    }
+    char *client_id = NULL;
+    char *client_secret = NULL;
+    char *access_token = NULL;
+    g_variant_lookup(ctx->auth_params, "ClientId", "&s", &client_id);
+    g_variant_lookup(ctx->auth_params, "ClientSecret", "&s", &client_secret);
+    g_variant_lookup(ctx->session_data, "AccessToken", "&s", &access_token);
+
+    authLogin(ctx, client_id, client_secret, access_token);
 }
 
 static void login_service(AuthContext *ctx) {
@@ -94,7 +99,8 @@ static void logout_service(AuthContext *ctx) {
         g_object_unref(ctx->account_service);
         ctx->account_service = NULL;
     }
-    printf("logged out\n");
+
+    authLogin(ctx, NULL, NULL, NULL);
 }
 
 static void lookup_account_service(AuthContext *ctx) {
@@ -128,20 +134,21 @@ static void account_enabled_cb(AgManager *manager, guint account_id, void *user_
     lookup_account_service(ctx);
 }
 
+static gboolean
+setup_context(void *user_data) {
+    AuthContext *ctx = (AuthContext *)user_data;
+
+    lookup_account_service(ctx);
+    g_signal_connect(ctx->manager, "enabled-event",
+                     G_CALLBACK(account_enabled_cb), ctx);
+    return FALSE;
+}
+
 AuthContext *watch_for_service(const char *service_name) {
     AuthContext *ctx = g_new0(AuthContext, 1);
     ctx->manager = ag_manager_new();
     ctx->service_name = g_strdup(service_name);
 
-    lookup_account_service(ctx);
-    g_signal_connect(ctx->manager, "enabled-event",
-                     G_CALLBACK(account_enabled_cb), ctx);
-
+    g_idle_add(setup_context, ctx);
     return ctx;
-}
-
-int main(int argc, char **argv) {
-    AuthContext *ctx = watch_for_service("soundcloud");
-    GMainLoop *main_loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(main_loop);
 }
