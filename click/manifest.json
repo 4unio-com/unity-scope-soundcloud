@@ -1,0 +1,16 @@
+{
+    "description": "Soundcloud scope",
+    "framework": "ubuntu-sdk-14.04-dev1",
+    "architecture": "all",
+    "hooks": {
+        "unity-scope-soundcloud": {
+            "scope": "unity-scope-soundcloud",
+            "apparmor": "scope-security.json"
+        }
+    },
+    "icon": "icon",
+    "maintainer": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
+    "name": "com.canonical.unity-scope-soundcloud",
+    "title": "Soundcloud scope",
+    "version": "1.0.0"
+}
