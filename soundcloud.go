@@ -178,5 +178,5 @@ func main() {
 		BaseURI: "https://api.soundcloud.com",
 		ClientId: "398e83f17ec3c5cf945f04772de9f400",
 	}
-	scopes.Run("unity-scope-soundcloud", scope)
+	scopes.Run("soundcloud", scope)
 }

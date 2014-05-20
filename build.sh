@@ -18,15 +18,15 @@
 
 # Simple script to build a click packaged scope.
 
-BUILDDIR="click/unity-scope-soundcloud"
+BUILDDIR="click/soundcloud"
 
 export GOPATH="${GOPATH}:${HOME}"
 
 rm -rf "${BUILDDIR}"
 mkdir "${BUILDDIR}"
 
-go build -o "${BUILDDIR}/unity-scope-soundcloud"
-cp "soundcloud.ini" "${BUILDDIR}/unity-scope-soundcloud.ini"
+go build -o "${BUILDDIR}/soundcloud"
+cp "soundcloud.ini" "${BUILDDIR}/soundcloud.ini"
 
 click build click
 
