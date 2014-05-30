@@ -1,7 +1,7 @@
 {
     "description": "Soundcloud scope",
     "framework": "ubuntu-sdk-14.10-dev1",
-    "architecture": "all",
+    "architecture": "%CLICK_ARCH%",
     "hooks": {
         "soundcloud": {
             "scope": "soundcloud",
@@ -10,7 +10,7 @@
     },
     "icon": "icon",
     "maintainer": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
-    "name": "com.canonical.soundcloud",
+    "name": "com.pete-woods.soundcloud",
     "title": "Soundcloud scope",
     "version": "1.0.1"
 }

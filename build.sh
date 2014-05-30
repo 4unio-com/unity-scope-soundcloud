@@ -18,16 +18,24 @@
 
 # Simple script to build a click packaged scope.
 
-BUILDDIR="click/soundcloud"
+if [ "$#" -ne 1 ]; then
+    echo "Usage: click-build.sh amd64|armhf|..."
+    exit 1
+fi
+
+CLICK_ARCH="$1"
+BUILDDIR="$PWD/builddir"
 
 export GOPATH="${GOPATH}:${HOME}"
 
 rm -rf "${BUILDDIR}"
-mkdir "${BUILDDIR}"
+mkdir -p "${BUILDDIR}/soundcloud"
 
-go build -o "${BUILDDIR}/com.canonical.soundcloud"
-cp "soundcloud.ini" "${BUILDDIR}/com.canonical.soundcloud.ini"
+go build -o "${BUILDDIR}/soundcloud/com.pete-woods.soundcloud"
+cp "soundcloud.ini" "${BUILDDIR}/soundcloud/com.pete-woods.soundcloud.ini"
+cp "click/scope-security.json" "${BUILDDIR}"
+sed -e "s/%CLICK_ARCH%/${CLICK_ARCH}/g" "click/manifest.json" > "${BUILDDIR}/manifest.json"
 
-click build click
+click build "${BUILDDIR}"
 
 rm -rf "${BUILDDIR}"

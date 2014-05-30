@@ -99,7 +99,7 @@ func (sc *SoundCloudScope) Search(query string, reply *scopes.SearchReply, cance
 		return err
 	}
 
-	cat := reply.RegisterCategory("com.canonical.soundcloud", "SoundCloud", "", searchCategoryTemplate)
+	cat := reply.RegisterCategory("soundcloud", "SoundCloud", "", searchCategoryTemplate)
 	for _, track := range tracks {
 		result := scopes.NewCategorisedResult(cat)
 		result.SetURI(track.PermalinkUrl)
@@ -178,5 +178,5 @@ func main() {
 		BaseURI: "https://api.soundcloud.com",
 		ClientId: "398e83f17ec3c5cf945f04772de9f400",
 	}
-	scopes.Run("com.canonical.soundcloud", scope)
+	scopes.Run("com.pete-woods.soundcloud", scope)
 }
