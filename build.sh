@@ -25,8 +25,8 @@ export GOPATH="${GOPATH}:${HOME}"
 rm -rf "${BUILDDIR}"
 mkdir "${BUILDDIR}"
 
-go build -o "${BUILDDIR}/soundcloud"
-cp "soundcloud.ini" "${BUILDDIR}/soundcloud.ini"
+go build -o "${BUILDDIR}/com.canonical.soundcloud"
+cp "soundcloud.ini" "${BUILDDIR}/com.canonical.soundcloud.ini"
 
 click build click
 

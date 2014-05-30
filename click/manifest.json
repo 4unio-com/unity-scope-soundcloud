@@ -1,6 +1,6 @@
 {
     "description": "Soundcloud scope",
-    "framework": "ubuntu-sdk-14.04-dev1",
+    "framework": "ubuntu-sdk-14.10-dev1",
     "architecture": "all",
     "hooks": {
         "soundcloud": {
@@ -12,5 +12,5 @@
     "maintainer": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
     "name": "com.canonical.soundcloud",
     "title": "Soundcloud scope",
-    "version": "1.0.0"
+    "version": "1.0.1"
 }
