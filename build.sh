@@ -31,8 +31,8 @@ export GOPATH="${GOPATH}:${HOME}"
 rm -rf "${BUILDDIR}"
 mkdir -p "${BUILDDIR}/soundcloud"
 
-go build -o "${BUILDDIR}/soundcloud/com.pete-woods.soundcloud"
-cp "soundcloud.ini" "${BUILDDIR}/soundcloud/com.pete-woods.soundcloud.ini"
+go build -o "${BUILDDIR}/soundcloud/com.pete-woods.soundcloud_soundcloud"
+cp "soundcloud.ini" "${BUILDDIR}/soundcloud/com.pete-woods.soundcloud_soundcloud.ini"
 cp "click/scope-security.json" "${BUILDDIR}"
 sed -e "s/%CLICK_ARCH%/${CLICK_ARCH}/g" "click/manifest.json" > "${BUILDDIR}/manifest.json"
 
