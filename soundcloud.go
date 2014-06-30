@@ -90,9 +90,10 @@ func (sc *SoundCloudScope) get(resource string, params map[string]string, result
 	return decoder.Decode(result)
 }
 
-func (sc *SoundCloudScope) Search(query string, reply *scopes.SearchReply, cancelled <-chan bool) error {
+func (sc *SoundCloudScope) Search(q *scopes.CannedQuery, metadata *scopes.SearchMetadata, reply *scopes.SearchReply, cancelled <-chan bool) error {
 	// We currently don't have any surfacing results
 	var tracks []track
+	query := q.QueryString()
 	if query == "" {
 		if sc.AccessToken != "" {
 			if err := sc.get("/me/favorites", map[string]string{"limit": "30", "order": "hotness", "oauth_token": sc.AccessToken}, &tracks); err != nil {
@@ -133,7 +134,7 @@ func (sc *SoundCloudScope) Search(query string, reply *scopes.SearchReply, cance
 	return nil
 }
 
-func (sc *SoundCloudScope) Preview(result *scopes.Result, reply *scopes.PreviewReply, cancelled <-chan bool) error {
+func (sc *SoundCloudScope) Preview(result *scopes.Result, metadata *scopes.ActionMetadata, reply *scopes.PreviewReply, cancelled <-chan bool) error {
 	header := scopes.NewPreviewWidget("header", "header")
 	header.AddAttributeMapping("title", "title")
 	header.AddAttributeMapping("subtitle", "username")
@@ -196,5 +197,7 @@ func main() {
 		}
 	}()
 
-	scopes.Run("soundcloud", scope)
+	if err := scopes.Run(scope); err != nil {
+		log.Fatalln(err)
+	}
 }
