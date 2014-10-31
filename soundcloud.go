@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"launchpad.net/go-unityscopes/v1"
+	"launchpad.net/go-onlineaccounts/v1"
 )
 
 const providerIcon = "/usr/share/icons/unity-icon-theme/places/svg/service-soundcloud.svg"
@@ -24,10 +25,26 @@ const searchCategoryTemplate = `{
   }
 }`
 
+const loginNagTemplate = `{
+  "schema-version": 1,
+  "template": {
+    "category-layout": "grid",
+    "card-total_results": "large",
+    "card-background": "color:///#DD4814"
+  },
+  "components": {
+    "title": "title",
+    "background": "background",
+    "art" : {
+      "aspect-ratio": 100.0
+    }
+  }}
+`
+
 type SoundCloudScope struct {
 	BaseURI     string
 	ClientId    string
-	AccessToken string
+	Accounts    *accounts.Watcher
 }
 
 type trackInfo struct {
@@ -71,6 +88,23 @@ type track struct {
 	License      string `json:"license"`
 }
 
+type AccountLoginAction int
+
+const (
+        _ = AccountLoginAction(iota)
+        DoNothing
+        InvalidateResults
+        ContinueActivation
+)
+
+type accountDetails struct {
+        ServiceName string `json:"service_name"`
+        ServiceType string `json:"service_type"`
+        ProviderName string `json:"provider_name"`
+        LoginPassedAction AccountLoginAction `json:"login_passed_action"`
+        LoginFailedAction AccountLoginAction `json:"login_failed_action"`
+}
+
 func (sc *SoundCloudScope) buildUrl(resource string, params map[string]string) string {
 	query := make(url.Values)
 	query.Set("client_id", sc.ClientId)
@@ -102,11 +136,41 @@ func (sc *SoundCloudScope) Search(q *scopes.CannedQuery, metadata *scopes.Search
 	var tracks []track
 	query := q.QueryString()
 	if query == "" {
-		if sc.AccessToken != "" {
-			if err := sc.get("/me/favorites", map[string]string{"limit": "30", "order": "hotness", "oauth_token": sc.AccessToken}, &tracks); err != nil {
+		accessToken := ""
+		services := sc.Accounts.EnabledServices()
+		if len(services) > 0 {
+			service := services[0]
+			// If the service is in an error state, try
+			// and refresh it.
+			if service.Error != nil {
+				service = sc.Accounts.Refresh(service.AccountId, false)
+			}
+			if service.Error != nil {
+				accessToken = service.AccessToken
+			}
+		}
+
+		if accessToken != "" {
+			if err := sc.get("/me/favorites", map[string]string{"limit": "30", "order": "hotness", "oauth_token": accessToken}, &tracks); err != nil {
 				return err
 			}
 		} else {
+			// Not logged in, so add nag
+			cat := reply.RegisterCategory("nag", "", "", loginNagTemplate)
+			result := scopes.NewCategorisedResult(cat)
+			result.SetURI(q.ToURI())
+			result.SetTitle("Log in to SoundCloud")
+			result.Set("online_account_details", accountDetails{
+				ServiceName: "soundcloud",
+				ServiceType: "sharing",
+				ProviderName: "soundcloud",
+				LoginPassedAction: InvalidateResults,
+				LoginFailedAction: DoNothing,
+			})
+			if err := reply.Push(result); err != nil {
+				return err
+			}
+
 			if err := sc.get("/tracks", map[string]string{"limit": "30", "order": "hotness"}, &tracks); err != nil {
 				return err
 			}
@@ -191,18 +255,15 @@ func (sc *SoundCloudScope) Preview(result *scopes.Result, metadata *scopes.Actio
 }
 
 func main() {
+	log.Println("Setting up accounts")
+	watcher := accounts.NewWatcher("sharing", []string{"soundcloud"})
+	watcher.Settle()
 	log.Println("Starting soundcloud scope")
 	scope := &SoundCloudScope{
 		BaseURI: "https://api.soundcloud.com",
 		ClientId: "eadbbc8380aa72be1412e2abe5f8e4ca",
+		Accounts: watcher,
 	}
-
-	go func() {
-		for data := range WatchForService("soundcloud") {
-			log.Printf("Logged in: %#v\n", data)
-			scope.AccessToken = data.AccessToken
-		}
-	}()
 
 	if err := scopes.Run(scope); err != nil {
 		log.Fatalln(err)
