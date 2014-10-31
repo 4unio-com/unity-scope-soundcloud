@@ -45,6 +45,7 @@ type SoundCloudScope struct {
 	BaseURI     string
 	ClientId    string
 	Accounts    *accounts.Watcher
+	base        *scopes.ScopeBase
 }
 
 type trackInfo struct {
@@ -125,10 +126,7 @@ func (sc *SoundCloudScope) get(resource string, params map[string]string, result
 }
 
 func (sc *SoundCloudScope) SetScopeBase(base *scopes.ScopeBase) {
-	log.Println("Scope base is", base)
-	var s interface{}
-	base.Settings(&s)
-	log.Println("Settings:", s)
+	sc.base = base
 }
 
 func (sc *SoundCloudScope) Search(q *scopes.CannedQuery, metadata *scopes.SearchMetadata, reply *scopes.SearchReply, cancelled <-chan bool) error {
