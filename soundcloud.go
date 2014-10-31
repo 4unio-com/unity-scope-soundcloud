@@ -136,12 +136,15 @@ func (sc *SoundCloudScope) Search(q *scopes.CannedQuery, metadata *scopes.Search
 	if query == "" {
 		accessToken := ""
 		services := sc.Accounts.EnabledServices()
+		log.Printf("Number of enabled services: %v\n", len(services))
 		if len(services) > 0 {
 			service := services[0]
+			log.Printf("Service: %#v\n", service)
 			// If the service is in an error state, try
 			// and refresh it.
 			if service.Error != nil {
 				service = sc.Accounts.Refresh(service.AccountId, false)
+				log.Printf("Refreshed: %#v\n", service)
 			}
 			if service.Error != nil {
 				accessToken = service.AccessToken
