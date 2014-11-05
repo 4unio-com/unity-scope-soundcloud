@@ -9,7 +9,7 @@
         }
     },
     "maintainer": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
-    "name": "com.ubuntu.scopes.unity-scope-soundcloud",
-    "title": "unity-scope-soundcloud",
+    "name": "com.ubuntu.scopes.soundcloud",
+    "title": "Ubuntu Soundcloud scope",
     "version": "0.1"
 }

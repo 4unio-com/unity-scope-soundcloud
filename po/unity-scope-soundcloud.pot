@@ -1,0 +1,218 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: unity-scope-soundcloud\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-11-05 11:43+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/scope/query.cpp:51
+msgid "Popular Audio"
+msgstr ""
+
+#: src/scope/query.cpp:52
+msgid "Audiobooks"
+msgstr ""
+
+#: src/scope/query.cpp:52
+msgid "Business"
+msgstr ""
+
+#: src/scope/query.cpp:52
+msgid "Comedy"
+msgstr ""
+
+#: src/scope/query.cpp:52
+msgid "Entertainment"
+msgstr ""
+
+#: src/scope/query.cpp:53
+msgid "Learning"
+msgstr ""
+
+#: src/scope/query.cpp:53
+msgid "News & Politics"
+msgstr ""
+
+#: src/scope/query.cpp:53
+msgid "Religion & Spirituality"
+msgstr ""
+
+#: src/scope/query.cpp:54
+msgid "Science"
+msgstr ""
+
+#: src/scope/query.cpp:54
+msgid "Sports"
+msgstr ""
+
+#: src/scope/query.cpp:54
+msgid "Storytelling"
+msgstr ""
+
+#: src/scope/query.cpp:54
+msgid "Technology"
+msgstr ""
+
+#: src/scope/query.cpp:65
+msgid "Popular Music"
+msgstr ""
+
+#: src/scope/query.cpp:66
+msgid "Alternative Rock"
+msgstr ""
+
+#: src/scope/query.cpp:66
+msgid "Ambient"
+msgstr ""
+
+#: src/scope/query.cpp:66
+msgid "Classical"
+msgstr ""
+
+#: src/scope/query.cpp:66
+msgid "Country"
+msgstr ""
+
+#: src/scope/query.cpp:67
+msgid "Dance"
+msgstr ""
+
+#: src/scope/query.cpp:67
+msgid "Deep House"
+msgstr ""
+
+#: src/scope/query.cpp:67
+msgid "Disco"
+msgstr ""
+
+#: src/scope/query.cpp:67
+msgid "Drum & Bass"
+msgstr ""
+
+#: src/scope/query.cpp:67
+msgid "Dubstep"
+msgstr ""
+
+#: src/scope/query.cpp:68
+msgid "Electro"
+msgstr ""
+
+#: src/scope/query.cpp:68
+msgid "Electronic"
+msgstr ""
+
+#: src/scope/query.cpp:68
+msgid "Folk"
+msgstr ""
+
+#: src/scope/query.cpp:68
+msgid "Hardcore Techno"
+msgstr ""
+
+#: src/scope/query.cpp:69
+msgid "Hip Hop"
+msgstr ""
+
+#: src/scope/query.cpp:69
+msgid "House"
+msgstr ""
+
+#: src/scope/query.cpp:69
+msgid "Indie Rock"
+msgstr ""
+
+#: src/scope/query.cpp:69
+msgid "Jazz"
+msgstr ""
+
+#: src/scope/query.cpp:69
+msgid "Latin"
+msgstr ""
+
+#: src/scope/query.cpp:70
+msgid "Metal"
+msgstr ""
+
+#: src/scope/query.cpp:70
+msgid "Minimal Techno"
+msgstr ""
+
+#: src/scope/query.cpp:70
+msgid "Piano"
+msgstr ""
+
+#: src/scope/query.cpp:70
+msgid "Pop"
+msgstr ""
+
+#: src/scope/query.cpp:71
+msgid "Progressive House"
+msgstr ""
+
+#: src/scope/query.cpp:71
+msgid "Punk"
+msgstr ""
+
+#: src/scope/query.cpp:71
+msgid "R&B"
+msgstr ""
+
+#: src/scope/query.cpp:71
+msgid "Rap"
+msgstr ""
+
+#: src/scope/query.cpp:72
+msgid "Reggae"
+msgstr ""
+
+#: src/scope/query.cpp:72
+msgid "Rock"
+msgstr ""
+
+#: src/scope/query.cpp:72
+msgid "Singer-Songwriter"
+msgstr ""
+
+#: src/scope/query.cpp:72
+msgid "Soul"
+msgstr ""
+
+#: src/scope/query.cpp:73
+msgid "Tech House"
+msgstr ""
+
+#: src/scope/query.cpp:73
+msgid "Techno"
+msgstr ""
+
+#: src/scope/query.cpp:73
+msgid "Trance"
+msgstr ""
+
+#: src/scope/query.cpp:73
+msgid "Trap"
+msgstr ""
+
+#: src/scope/query.cpp:74
+msgid "Trip Hop"
+msgstr ""
+
+#: src/scope/query.cpp:74
+msgid "World"
+msgstr ""
+
+#: src/scope/query.cpp:94
+msgid "Soundcloud"
+msgstr ""

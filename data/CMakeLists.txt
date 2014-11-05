@@ -1,7 +1,7 @@
 
 # Install the scope ini file
 install(
-  FILES "com.ubuntu.scopes.unity-scope-soundcloud_soundcloud.ini"
+  FILES "com.ubuntu.scopes.soundcloud_soundcloud.ini"
   DESTINATION ${SCOPE_INSTALL_DIR}
 )
 

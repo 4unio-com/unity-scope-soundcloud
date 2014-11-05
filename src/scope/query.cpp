@@ -19,150 +19,134 @@ using namespace std;
 using namespace api;
 using namespace scope;
 
+namespace {
 
-/**
- * Define the layout for the forecast results
- *
- * The icon size is small, and ask for the card layout
- * itself to be horizontal. I.e. the text will be placed
- * next to the image.
- */
-const static string WEATHER_TEMPLATE =
+const static string SEARCH_CATEGORY_TEMPLATE =
         R"(
 {
-        "schema-version": 1,
-        "template": {
-        "category-layout": "grid",
-        "card-layout": "horizontal",
-        "card-size": "small"
-        },
-        "components": {
-        "title": "title",
-        "art" : {
-        "field": "art"
-        },
-        "subtitle": "subtitle"
-        }
-        }
-        )";
+  "schema-version": 1,
+  "template": {
+    "category-layout": "grid",
+    "card-size": "large",
+    "overlay": true,
+    "card-background": "color:///#000000"
+  },
+  "components": {
+    "title": "title",
+    "art" : {
+      "field": "art",
+      "aspect-ratio": 4.0
+    },
+    "subtitle": "subtitle",
+    "mascot": "mascot",
+    "attributes": "attributes"
+  }
+}
+)";
 
-/**
- * Define the larger "current weather" layout.
- *
- * The icons are larger.
- */
-const static string CITY_TEMPLATE =
-        R"(
-{
-        "schema-version": 1,
-        "template": {
-        "category-layout": "grid",
-        "card-size": "medium"
-        },
-        "components": {
-        "title": "title",
-        "art" : {
-        "field": "art"
-        },
-        "subtitle": "subtitle"
-        }
-        }
-        )";
+static const vector<string> AUDIO_DEPARTMENT_IDS { "Popular Audio",
+        "Audiobooks", "Business", "Comedy", "Entertainment", "Learning",
+        "News & Politics", "Religion & Spirituality", "Science", "Sports",
+        "Storytelling", "Technology" };
+
+static const vector<string> AUDIO_DEPARTMENT_NAMES { _("Popular Audio"), _(
+        "Audiobooks"), _("Business"), _("Comedy"), _("Entertainment"), _(
+        "Learning"), _("News & Politics"), _("Religion & Spirituality"), _(
+        "Science"), _("Sports"), _("Storytelling"), _("Technology") };
+
+static const vector<string> MUSIC_DEPARTMENT_IDS { "Popular Music",
+        "Alternative Rock", "Ambient", "Classical", "Country", "Dance",
+        "Deep House", "Disco", "Drum & Bass", "Dubstep", "Electro",
+        "Electronic", "Folk", "Hardcore Techno", "Hip Hop", "House",
+        "Indie Rock", "Jazz", "Latin", "Metal", "Minimal Techno", "Piano",
+        "Pop", "Progressive House", "Punk", "R&B", "Rap", "Reggae", "Rock",
+        "Singer-Songwriter", "Soul", "Tech House", "Techno", "Trance", "Trap",
+        "Trip Hop", "World" };
+
+static const vector<string> MUSIC_DEPARTMENT_NAMES { _("Popular Music"), _(
+        "Alternative Rock"), _("Ambient"), _("Classical"), _("Country"), _(
+        "Dance"), _("Deep House"), _("Disco"), _("Drum & Bass"), _("Dubstep"),
+        _("Electro"), _("Electronic"), _("Folk"), _("Hardcore Techno"), _(
+                "Hip Hop"), _("House"), _("Indie Rock"), _("Jazz"), _("Latin"),
+        _("Metal"), _("Minimal Techno"), _("Piano"), _("Pop"), _(
+                "Progressive House"), _("Punk"), _("R&B"), _("Rap"), _(
+                "Reggae"), _("Rock"), _("Singer-Songwriter"), _("Soul"), _(
+                "Tech House"), _("Techno"), _("Trance"), _("Trap"), _(
+                "Trip Hop"), _("World") };
+
+template<typename T>
+static T get_or_throw(future<T> &f) {
+    if (f.wait_for(std::chrono::seconds(10)) != future_status::ready) {
+        throw domain_error("HTTP request timeout");
+    }
+    return f.get();
+}
+
+static sc::Department::SPtr create_departments(const sc::CannedQuery &query) {
+    sc::Department::SPtr root_department = sc::Department::create("", query,
+            MUSIC_DEPARTMENT_NAMES.front());
+    for (size_t i = 1; i < MUSIC_DEPARTMENT_IDS.size(); ++i) {
+        sc::Department::SPtr dept = sc::Department::create(
+                MUSIC_DEPARTMENT_IDS[i], query, MUSIC_DEPARTMENT_NAMES[i]);
+        root_department->add_subdepartment(dept);
+    }
+    for (size_t i = 0; i < AUDIO_DEPARTMENT_IDS.size(); ++i) {
+        sc::Department::SPtr dept = sc::Department::create(
+                AUDIO_DEPARTMENT_IDS[i], query, AUDIO_DEPARTMENT_NAMES[i]);
+        root_department->add_subdepartment(dept);
+    }
+    return root_department;
+}
+
+static string department_to_category(const string &department) {
+    string id = department;
+    if (id.empty()) {
+        id = MUSIC_DEPARTMENT_IDS.front();
+    }
+    return id;
+}
+
+}
 
 Query::Query(const sc::CannedQuery &query, const sc::SearchMetadata &metadata,
-             Config::Ptr config) :
-    sc::SearchQueryBase(query, metadata), client_(config) {
+        Config::Ptr config) :
+        sc::SearchQueryBase(query, metadata), client_(config) {
 }
 
 void Query::cancelled() {
     client_.cancel();
 }
 
-
 void Query::run(sc::SearchReplyProxy const& reply) {
     try {
-        // Start by getting information about the query
         const sc::CannedQuery &query(sc::SearchQueryBase::query());
-
-        // Trim the query string of whitespace
         string query_string = alg::trim_copy(query.query_string());
 
-        Client::Current current;
+        reply->register_departments(create_departments(query));
+
+        future<deque<Track>> tracks_future;
         if (query_string.empty()) {
-            // If the string is empty, get the current weather for London
-            current = client_.weather("London,uk");
+            tracks_future = client_.search_tracks(query_string,
+                    department_to_category(query.department_id()));
         } else {
-            // otherwise, get the current weather for the search string
-            current = client_.weather(query_string);
+            tracks_future = client_.search_tracks(query_string);
         }
 
-        // Build up the description for the city
-        stringstream ss(stringstream::in | stringstream::out);
-        ss << current.city.name << ", " << current.city.country;
+        auto cat = reply->register_category("explore", _("Explore"), "",
+                sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
 
-        // Register a category for the current weather, with the title we just built
-        auto location_cat = reply->register_category("current", ss.str(), "",
-                                                     sc::CategoryRenderer(CITY_TEMPLATE));
+        for (const auto &track : get_or_throw(tracks_future)) {
+            sc::CategorisedResult res(cat);
 
-        {
-            // Create a single result for the current weather category
-            sc::CategorisedResult res(location_cat);
-
-            // We must have a URI
-            res.set_uri(to_string(current.city.id));
-
-            // Build up the description for the current weather
-            stringstream ss(stringstream::in | stringstream::out);
-            ss << setprecision(3) << current.weather.temp.cur;
-            ss << "°C";
-            res.set_title(ss.str());
-
-            // Set the rest of the attributes, art, description, etc
-            res.set_art(current.weather.icon);
-            res["subtitle"] = current.weather.description;
-            res["description"] = "A description of the result";
-
-            // Push the result
-            if (!reply->push(res)) {
-                // If we fail to push, it means the query has been cancelled.
-                // So don't continue;
-                return;
-            }
-        }
-
-        Client::Forecast forecast;
-        if (query_string.empty()) {
-            // If there is no search string, get the forecast for London
-            forecast = client_.forecast_daily("London,uk");
-        } else {
-            // otherwise, get the forecast for the search string
-            forecast = client_.forecast_daily(query_string);
-        }
-
-        // Register a category for the forecast
-        auto forecast_cat = reply->register_category("forecast",
-                                                     _("7 day forecast"), "", sc::CategoryRenderer(WEATHER_TEMPLATE));
-
-        // For each of the forecast days
-        for (const auto &weather : forecast.weather) {
-            // Create a result
-            sc::CategorisedResult res(forecast_cat);
-
-            // We must have a URI
-            res.set_uri(to_string(weather.id));
-
-            // Build the description for the result
-            stringstream ss(stringstream::in | stringstream::out);
-            ss << setprecision(3) << weather.temp.max;
-            ss << "°C to ";
-            ss << setprecision(3) << weather.temp.min;
-            ss << "°C";
-            res.set_title(ss.str());
+            res.set_uri(to_string(track.id()));
+            res.set_title(track.title());
 
             // Set the rest of the attributes
-            res.set_art(weather.icon);
-            res["subtitle"] = weather.description;
-            res["description"] = "A description of the result";
+            res.set_art(track.waveform());
+
+            res["mascot"] = track.artwork();
+            res["subtitle"] = track.user().title();
+            res["description"] = track.description();
 
             // Push the result
             if (!reply->push(res)) {

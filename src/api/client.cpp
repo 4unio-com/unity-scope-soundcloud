@@ -1,5 +1,8 @@
 #include <api/client.h>
+#include <api/track.h>
 
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 #include <core/net/error.h>
 #include <core/net/http/client.h>
 #include <core/net/http/content_type.h>
@@ -7,155 +10,157 @@
 #include <json/json.h>
 
 namespace http = core::net::http;
-namespace net = core::net;
+namespace io = boost::iostreams;
 namespace json = Json;
+namespace net = core::net;
 
 using namespace api;
 using namespace std;
 
-Client::Client(Config::Ptr config) :
-    config_(config), cancelled_(false) {
-}
+namespace {
 
+template<typename T>
+static deque<T> get_typed_list(const string &filter, const json::Value &root) {
+    deque<T> results;
+    for (json::ArrayIndex index = 0; index < root.size(); ++index) {
+        json::Value item = root[index];
 
-void Client::get(const net::Uri::Path &path,
-                 const net::Uri::QueryParameters &parameters, json::Value &root) {
-    // Create a new HTTP client
-    auto client = http::make_client();
+        string kind = item["kind"].asString();
 
-    // Start building the request configuration
-    http::Request::Configuration configuration;
-
-    // Build the URI from its components
-    net::Uri uri = net::make_uri(config_->apiroot, path, parameters);
-    configuration.uri = client->uri_to_string(uri);
-
-    // Give out a user agent string
-    configuration.header.add("User-Agent", config_->user_agent);
-
-    // Build a HTTP request object from our configuration
-    auto request = client->head(configuration);
-
-    try {
-        // Synchronously make the HTTP request
-        // We bind the cancellable callback to #progress_report
-        auto response = request->execute(
-                    bind(&Client::progress_report, this, placeholders::_1));
-
-        // Check that we got a sensible HTTP status code
-        if (response.status != http::Status::ok) {
-            throw domain_error(response.body);
+        if (kind == filter) {
+            results.emplace_back(T(item));
         }
-        // Parse the JSON from the response
-        json::Reader reader;
-        reader.parse(response.body, root);
-
-        // Open weather map API error code can either be a string or int
-        json::Value cod = root["cod"];
-        if ((cod.isString() && cod.asString() != "200")
-                || (cod.isUInt() && cod.asUInt() != 200)) {
-            throw domain_error(root["message"].asString());
-        }
-    } catch (net::Error &) {
     }
+    return results;
 }
 
-Client::Current Client::weather(const string& query) {
-    json::Value root;
-
-    // Build a URI and get the contents.
-    // The fist parameter forms the path part of the URI.
-    // The second parameter forms the CGI parameters.
-    get(
-    { "data", "2.5", "weather" },
-    { { "q", query }, { "units", "metric" }
-                },
-                root);
-    // e.g. http://api.openweathermap.org/data/2.5/weather?q=QUERY&units=metric
-
-    Current result;
-
-    // Read out the city we found
-    json::Value sys = root["sys"];
-    result.city.id = sys["id"].asUInt();
-    result.city.name = root["name"].asString();
-    result.city.country = sys["country"].asString();
-
-    // Read the weather
-    json::Value weather = root["weather"].get(json::ArrayIndex(0),
-                                              json::Value());
-    result.weather.id = weather["id"].asUInt();
-    result.weather.main = weather["main"].asString();
-    result.weather.description = weather["description"].asString();
-    result.weather.icon = "http://openweathermap.org/img/w/"
-            + weather["icon"].asString() + ".png";
-
-    // Read the temps
-    json::Value main = root["main"];
-    result.weather.temp.cur = main["temp"].asDouble();
-    result.weather.temp.max = main["temp_max"].asDouble();
-    result.weather.temp.min = main["temp_min"].asDouble();
-    return result;
 }
 
-Client::Forecast Client::forecast_daily(const string& query, unsigned int cnt) {
-    json::Value root;
-
-    // Build a URI and get the contents
-    // The fist parameter forms the path part of the URI.
-    // The second parameter forms the CGI parameters.
-    get( { "data", "2.5", "forecast", "daily" }, { { "q", query }, { "units",
-                                                                     "metric" }, { "cnt", to_string(cnt) }
-         }, root);
-    // e.g. http://api.openweathermap.org/data/2.5/forecast/daily/?q=QUERY&units=metric&cnt=7
-
-    Forecast result;
-
-    // Read out the city we found
-    json::Value city = root["city"];
-    result.city.id = city["id"].asUInt();
-    result.city.name = city["name"].asString();
-    result.city.country = city["country"].asString();
-
-    // Iterate through the weather data
-    json::Value list = root["list"];
-    for (json::ArrayIndex index = 0; index < list.size(); ++index) {
-        json::Value item = list.get(index, json::Value());
-
-        // Extract the first weather item
-        json::Value weather_list = item["weather"];
-        json::Value weather = weather_list.get(json::ArrayIndex(0),
-                                               json::Value());
-
-        // Extract the temperature data
-        json::Value temp = item["temp"];
-
-        // Add a result to the weather list
-        result.weather.emplace_back(
-                    Weather { weather["id"].asUInt(), weather["main"].asString(),
-                              weather["description"].asString(),
-                              "http://openweathermap.org/img/w/"
-                              + weather["icon"].asString() + ".png", Temp {
-                                  temp["max"].asDouble(), temp["min"].asDouble(),
-                                  0.0 } });
+class Client::Priv {
+public:
+    Priv(Config::Ptr config) :
+            client_(http::make_client()), worker_ { [this]() {client_->run();} }, config_(
+                    config), cancelled_(false) {
     }
 
-    return result;
-}
+    ~Priv() {
+        client_->stop();
+        if (worker_.joinable()) {
+            worker_.join();
+        }
+    }
 
-http::Request::Progress::Next Client::progress_report(
-        const http::Request::Progress&) {
+    std::shared_ptr<core::net::http::Client> client_;
 
-    return cancelled_ ?
+    std::thread worker_;
+
+    Config::Ptr config_;
+
+    std::atomic<bool> cancelled_;
+
+    void get(const net::Uri::Path &path,
+            const net::Uri::QueryParameters &parameters,
+            http::Request::Handler &handler) {
+
+        http::Request::Configuration configuration;
+        net::Uri::QueryParameters complete_parameters(parameters);
+        if (config_->authenticated) {
+            configuration.header.add("Authorization",
+                    "Bearer " + config_->access_token);
+        } else {
+            complete_parameters.emplace_back("client_id", config_->client_id);
+        }
+
+        net::Uri uri = net::make_uri(config_->apiroot, path,
+                complete_parameters);
+        configuration.uri = client_->uri_to_string(uri);
+        cerr << "URI: " << configuration.uri << endl;
+        configuration.header.add("User-Agent", config_->user_agent + " (gzip)");
+        configuration.header.add("Accept-Encoding", "gzip");
+
+        auto request = client_->head(configuration);
+        request->async_execute(handler);
+    }
+
+    http::Request::Progress::Next progress_report(
+            const http::Request::Progress&) {
+        return cancelled_ ?
                 http::Request::Progress::Next::abort_operation :
                 http::Request::Progress::Next::continue_operation;
+    }
+
+    template<typename T>
+    future<T> async_get(const net::Uri::Path &path,
+            const net::Uri::QueryParameters &parameters,
+            const function<T(const json::Value &root)> &func) {
+        auto prom = make_shared<promise<T>>();
+
+        http::Request::Handler handler;
+        handler.on_progress(
+                bind(&Client::Priv::progress_report, this, placeholders::_1));
+        handler.on_error([prom](const net::Error& e)
+        {
+            prom->set_exception(make_exception_ptr(e));
+        });
+        handler.on_response(
+                [prom,func](const http::Response& response)
+                {
+                    string decompressed;
+
+                    if(!response.body.empty()) {
+                        try {
+                            io::filtering_ostream os;
+                            os.push(io::gzip_decompressor());
+                            os.push(io::back_inserter(decompressed));
+                            os << response.body;
+                            boost::iostreams::close(os);
+                        } catch(io::gzip_error &e) {
+                            prom->set_exception(make_exception_ptr(e));
+                            return;
+                        }
+                    }
+
+                    json::Value root;
+                    json::Reader reader;
+                    reader.parse(decompressed, root);
+
+                    if (response.status != http::Status::ok) {
+                        prom->set_exception(make_exception_ptr(domain_error(root["error"].asString())));
+                    } else {
+                        prom->set_value(func(root));
+                    }
+                });
+
+        get(path, parameters, handler);
+
+        return prom->get_future();
+    }
+};
+
+Client::Client(Config::Ptr config) :
+        p(new Priv(config)) {
+}
+
+future<deque<Track>> Client::search_tracks(const string &query,
+        const string &genre) {
+    net::Uri::QueryParameters params;
+    if (!query.empty()) {
+        params.emplace_back(make_pair("q", query));
+    }
+    if (!genre.empty()) {
+        params.emplace_back(make_pair("genres", genre));
+    }
+    return p->async_get<deque<Track>>( { "tracks.json" }, params,
+            [](const json::Value &root) {
+                return get_typed_list<Track>("track", root);
+            });
 }
 
 void Client::cancel() {
-    cancelled_ = true;
+    p->cancelled_ = true;
 }
 
 Config::Ptr Client::config() {
-    return config_;
+    return p->config_;
 }
 

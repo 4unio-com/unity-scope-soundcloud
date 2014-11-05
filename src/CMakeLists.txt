@@ -2,8 +2,8 @@
 # Put the ini file in the build directory next to the scope
 # .so file so test tools can find both easily.
 configure_file(
-  "${CMAKE_SOURCE_DIR}/data/com.ubuntu.scopes.unity-scope-soundcloud_soundcloud.ini"
-  "${CMAKE_CURRENT_BINARY_DIR}/com.ubuntu.scopes.unity-scope-soundcloud_soundcloud.ini"
+  "${CMAKE_SOURCE_DIR}/data/com.ubuntu.scopes.soundcloud_soundcloud.ini"
+  "${CMAKE_CURRENT_BINARY_DIR}/com.ubuntu.scopes.soundcloud_soundcloud.ini"
   @ONLY
 )
 
@@ -17,6 +17,8 @@ configure_file(
 # The sources to build the scope
 set(SCOPE_SOURCES
   api/client.cpp
+  api/track.cpp
+  api/user.cpp
   scope/preview.cpp
   scope/query.cpp
   scope/scope.cpp
@@ -61,7 +63,7 @@ target_link_libraries(
 set_target_properties(
   scope
   PROPERTIES
-    OUTPUT_NAME "com.ubuntu.scopes.unity-scope-soundcloud_soundcloud"
+    OUTPUT_NAME "com.ubuntu.scopes.soundcloud_soundcloud"
 )
 
 # Install the scope shared library

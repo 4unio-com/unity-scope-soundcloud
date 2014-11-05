@@ -27,13 +27,15 @@ find_package(PkgConfig)
 # We depend on Boost for string trimming
 find_package(
   Boost
+  COMPONENTS
+    iostreams
   REQUIRED
 )
 
 # Search for our dependencies
 pkg_check_modules(
   SCOPE
-  libunity-scopes>=0.6.0
+  libunity-scopes>=0.6.7
   jsoncpp
   net-cpp>=1.1.0
   REQUIRED
@@ -57,8 +59,8 @@ set(SCOPE_INSTALL_DIR "/soundcloud")
 set(GETTEXT_PACKAGE "unity-scope-soundcloud")
 
 # If we need to refer to the scope's name or package in code, these definitions will help
-add_definitions(-DPACKAGE_NAME="com.ubuntu.scopes.unity-scope-soundcloud")
-add_definitions(-DSCOPE_NAME="com.ubuntu.scopes.unity-scope-soundcloud_soundcloud")
+add_definitions(-DPACKAGE_NAME="com.ubuntu.scopes.soundcloud")
+add_definitions(-DSCOPE_NAME="com.ubuntu.scopes.soundcloud_soundcloud")
 add_definitions(-DGETTEXT_PACKAGE="${GETTEXT_PACKAGE}")
 
 #This command figures out the target architecture and puts it into the manifest file

@@ -9,15 +9,15 @@ namespace api {
 struct Config {
     typedef std::shared_ptr<Config> Ptr;
 
-    /*
-     * The root of all API request URLs
-     */
-    std::string apiroot { "http://api.openweathermap.org" };
+    std::string client_id { "eadbbc8380aa72be1412e2abe5f8e4ca" };
 
-    /*
-     * The custom HTTP user agent string for this library
-     */
-    std::string user_agent { "example-network-scope 0.1; (foo)" };
+    std::string apiroot { "https://api.soundcloud.com" };
+
+    std::string user_agent { "unity-scope-soundcloud 0.1" };
+
+    std::string access_token { };
+
+    bool authenticated = false;
 };
 
 }
