@@ -18,6 +18,8 @@ struct Config {
     std::string access_token { };
 
     bool authenticated = false;
+
+    std::string directory {};
 };
 
 }

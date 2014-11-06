@@ -8,14 +8,18 @@
 #include <unity/scopes/CategoryRenderer.h>
 #include <unity/scopes/QueryBase.h>
 #include <unity/scopes/SearchReply.h>
+#include <unity/scopes/VariantBuilder.h>
 
+#include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <ctime>
 
 namespace sc = unity::scopes;
 namespace alg = boost::algorithm;
 
 using namespace std;
+using namespace std::chrono;
 using namespace api;
 using namespace scope;
 
@@ -34,12 +38,15 @@ const static string SEARCH_CATEGORY_TEMPLATE =
   "components": {
     "title": "title",
     "art" : {
-      "field": "art",
+      "field": "waveform",
       "aspect-ratio": 4.0
     },
-    "subtitle": "subtitle",
-    "mascot": "mascot",
-    "attributes": "attributes"
+    "subtitle": "username",
+    "mascot": "art",
+    "attributes": {
+      "field": "attributes",
+      "max-count": 3
+    }
   }
 }
 )";
@@ -106,6 +113,34 @@ static string department_to_category(const string &department) {
     return id;
 }
 
+static string format_fixed(unsigned int i) {
+    std::stringstream ss;
+    ss.imbue(std::locale(""));
+    ss << std::fixed << i;
+    return ss.str();
+}
+
+static string format_time(unsigned int t) {
+    milliseconds ms(t);
+
+    hours   hh = duration_cast<hours>(ms);
+    minutes mm = duration_cast<minutes>(ms % chrono::hours(1));
+    seconds ss = duration_cast<chrono::seconds>(ms % chrono::minutes(1));
+
+    stringstream result;
+
+    if (hh.count() > 0) {
+        result << hh.count() << ":" << setw(2) << setfill('0') << mm.count()
+                << ":" << setw(2) << setfill('0') << ss.count();
+    } else if (mm.count() > 0) {
+        result << mm.count() << ":" << setw(2) << setfill('0') << ss.count();
+    } else if (ss.count() > 0) {
+        result << "0:" << setw(2) << setfill('0') << ss.count();
+    }
+
+    return result.str();
+}
+
 }
 
 Query::Query(const sc::CannedQuery &query, const sc::SearchMetadata &metadata,
@@ -138,26 +173,43 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         for (const auto &track : get_or_throw(tracks_future)) {
             sc::CategorisedResult res(cat);
 
-            res.set_uri(to_string(track.id()));
+            res.set_uri(track.permalink_url());
             res.set_title(track.title());
+            if (track.artwork().empty()) {
+                res.set_art(track.artwork());
+            } else {
+                res.set_art(track.user().artwork());
+            }
 
-            // Set the rest of the attributes
-            res.set_art(track.waveform());
-
-            res["mascot"] = track.artwork();
-            res["subtitle"] = track.user().title();
+            res["label"] = track.label_name();
+            res["stream-url"] = track.stream_url();
+            res["purchase-url"] = track.purchase_url();
+            res["video-url"] = track.video_url();
+            res["waveform"] = track.waveform();
+            res["username"] = track.user().title();
             res["description"] = track.description();
 
-            // Push the result
+            string duration = format_time(track.duration());
+            string playback_count = format_fixed(track.playback_count());
+            string favoritings_count = format_fixed(track.favoritings_count());
+            res["duration"] = duration;
+            res["playback-count"] = playback_count;
+            res["favoritings-count"] = favoritings_count;
+
+            sc::VariantBuilder builder;
+            builder.add_tuple({{"value", sc::Variant(duration)}});
+            builder.add_tuple({{"value", sc::Variant(playback_count)},
+                {"icon", sc::Variant(client_.config()->directory + "/plays.png")}});
+            builder.add_tuple({{"value", sc::Variant(favoritings_count)},
+                {"icon", sc::Variant(client_.config()->directory + "/likes.png")}});
+            res["attributes"] = builder.end();
+
             if (!reply->push(res)) {
-                // If we fail to push, it means the query has been cancelled.
-                // So don't continue;
                 return;
             }
         }
 
     } catch (domain_error &e) {
-        // Handle exceptions being thrown by the client API
         cerr << e.what() << endl;
         reply->error(current_exception());
     }

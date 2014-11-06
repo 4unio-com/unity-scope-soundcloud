@@ -8,8 +8,12 @@ install(
 # Install the scope images
 install(
   FILES
+    "comments.png"
     "icon.png"
+    "likes.png"
     "logo.png"
+    "plays.png"
+    "reposts.png"
     "screenshot.png"
   DESTINATION
     "${SCOPE_INSTALL_DIR}"

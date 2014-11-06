@@ -38,6 +38,8 @@ public:
 
     virtual ~Track() = default;
 
+    const unsigned int & id() const override;
+
     const std::string & title() const override;
 
     const std::string & artwork() const override;
@@ -46,7 +48,33 @@ public:
 
     const std::string & description() const;
 
-    const unsigned int & id() const override;
+    const std::string & uri() const;
+
+    const std::string & label_name() const;
+
+    unsigned int duration() const;
+
+    const std::string & license() const;
+
+    const std::string & created_at() const;
+
+    bool streamable() const;
+
+    bool downloadable() const;
+
+    const std::string & permalink_url() const;
+
+    const std::string & purchase_url() const;
+
+    const std::string & stream_url() const;
+
+    const std::string & download_url() const;
+
+    const std::string & video_url() const;
+
+    unsigned int playback_count() const;
+
+    unsigned int favoritings_count() const;
 
     const User & user() const;
 
@@ -55,15 +83,43 @@ public:
     std::string kind_str() const override;
 
 protected:
+    unsigned int id_;
+
     std::string title_;
 
-    unsigned int id_;
+    std::string description_;
 
     std::string artwork_;
 
     std::string waveform_;
 
-    std::string description_;
+    std::string uri_;
+
+    std::string label_name_;
+
+    unsigned int duration_;
+
+    std::string license_;
+
+    std::string created_at_;
+
+    bool streamable_;
+
+    bool downloadable_;
+
+    std::string permalink_url_;
+
+    std::string purchase_url_;
+
+    std::string stream_url_;
+
+    std::string download_url_;
+
+    std::string video_url_;
+
+    unsigned int playback_count_;
+
+    unsigned int favoritings_count_;
 
     User user_;
 };

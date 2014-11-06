@@ -18,7 +18,8 @@ namespace scope {
 class Query: public unity::scopes::SearchQueryBase {
 public:
     Query(const unity::scopes::CannedQuery &query,
-          const unity::scopes::SearchMetadata &metadata, api::Config::Ptr config);
+            const unity::scopes::SearchMetadata &metadata,
+            api::Config::Ptr config);
 
     ~Query() = default;
 
@@ -33,5 +34,4 @@ private:
 }
 
 #endif // SCOPE_QUERY_H_
-
 

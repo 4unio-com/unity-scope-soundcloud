@@ -7,11 +7,23 @@ configure_file(
   @ONLY
 )
 
-configure_file(
-  "${CMAKE_SOURCE_DIR}/data/logo.png"
-  "${CMAKE_CURRENT_BINARY_DIR}/logo.png"
-  @ONLY
-  COPYONLY
+function(configure_icons)
+  foreach(_file ${ARGV})
+    configure_file(
+      "${CMAKE_SOURCE_DIR}/data/${_file}"
+      "${CMAKE_CURRENT_BINARY_DIR}/${_file}"
+      @ONLY
+      COPYONLY
+    )
+  endforeach()
+endfunction()
+
+configure_icons(
+  "comments.png"
+  "likes.png"
+  "logo.png"
+  "plays.png"
+  "reposts.png"
 )
 
 # The sources to build the scope

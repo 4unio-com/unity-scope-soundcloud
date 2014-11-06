@@ -14,6 +14,7 @@ using namespace scope;
 
 void Scope::start(string const&) {
     config_ = make_shared<Config>();
+    config_->directory = scope_directory();
 
     setlocale(LC_ALL, "");
     string translation_directory = ScopeBase::scope_directory()
@@ -32,13 +33,11 @@ void Scope::stop() {
 
 sc::SearchQueryBase::UPtr Scope::search(const sc::CannedQuery &query,
                                         const sc::SearchMetadata &metadata) {
-    // Boilerplate construction of Query
     return sc::SearchQueryBase::UPtr(new Query(query, metadata, config_));
 }
 
 sc::PreviewQueryBase::UPtr Scope::preview(sc::Result const& result,
                                           sc::ActionMetadata const& metadata) {
-    // Boilerplate construction of Preview
     return sc::PreviewQueryBase::UPtr(new Preview(result, metadata));
 }
 
