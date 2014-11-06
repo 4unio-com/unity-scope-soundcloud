@@ -161,10 +161,13 @@ void Query::run(sc::SearchReplyProxy const& reply) {
 
         future<deque<Track>> tracks_future;
         if (query_string.empty()) {
-            tracks_future = client_.search_tracks(query_string,
-                    department_to_category(query.department_id()));
+            tracks_future = client_.search_tracks( {
+                    { SP::query, query_string }, { SP::genre,
+                            department_to_category(query.department_id()) }, {
+                            SP::limit, "15" } });
         } else {
-            tracks_future = client_.search_tracks(query_string);
+            tracks_future = client_.search_tracks( {
+                    { SP::query, query_string }, { SP::limit, "15" } });
         }
 
         auto cat = reply->register_category("explore", _("Explore"), "",

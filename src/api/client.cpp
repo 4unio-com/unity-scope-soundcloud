@@ -141,14 +141,20 @@ Client::Client(Config::Ptr config) :
         p(new Priv(config)) {
 }
 
-future<deque<Track>> Client::search_tracks(const string &query,
-        const string &genre) {
+future<deque<Track>> Client::search_tracks(const std::deque<std::pair<SP, std::string>> &parameters) {
     net::Uri::QueryParameters params;
-    if (!query.empty()) {
-        params.emplace_back(make_pair("q", query));
-    }
-    if (!genre.empty()) {
-        params.emplace_back(make_pair("genres", genre));
+    for(const auto &p: parameters) {
+        switch(p.first){
+        case SP::genre:
+            params.emplace_back(make_pair("genres", p.second));
+            break;
+        case SP::limit:
+            params.emplace_back(make_pair("limit", p.second));
+            break;
+        case SP::query:
+            params.emplace_back(make_pair("q", p.second));
+            break;
+        }
     }
     return p->async_get<deque<Track>>( { "tracks.json" }, params,
             [](const json::Value &root) {

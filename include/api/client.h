@@ -19,6 +19,13 @@ class Value;
 namespace api {
 
 /**
+ * Search parameters
+ */
+enum class SP {
+    genre, limit, query
+};
+
+/**
  * Provide a nice way to access the HTTP API.
  *
  * We don't want our scope's code to be mixed together with HTTP and JSON handling.
@@ -29,8 +36,9 @@ public:
 
     virtual ~Client() = default;
 
+
     virtual std::future<std::deque<Track>> search_tracks(
-            const std::string &query, const std::string &genre = std::string());
+            const std::deque<std::pair<SP, std::string>> &parameters);
 
     /**
      * Cancel any pending queries (this method can be called from a different thread)
