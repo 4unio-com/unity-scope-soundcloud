@@ -159,19 +159,23 @@ void Query::run(sc::SearchReplyProxy const& reply) {
 
         reply->register_departments(create_departments(query));
 
+        sc::Category::SCPtr cat;
         future<deque<Track>> tracks_future;
         if (query_string.empty()) {
+            cat = reply->register_category("explore", _("Explore"), "",
+                    sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
             tracks_future = client_.search_tracks( {
                     { SP::query, query_string }, { SP::genre,
                             department_to_category(query.department_id()) }, {
                             SP::limit, "15" } });
         } else {
+            cat = reply->register_category("search", "", "",
+                    sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
             tracks_future = client_.search_tracks( {
-                    { SP::query, query_string }, { SP::limit, "15" } });
+                    { SP::query, query_string }, { SP::limit, "30" } });
         }
 
-        auto cat = reply->register_category("explore", _("Explore"), "",
-                sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
+
 
         for (const auto &track : get_or_throw(tracks_future)) {
             sc::CategorisedResult res(cat);
