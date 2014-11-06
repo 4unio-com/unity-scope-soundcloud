@@ -185,7 +185,8 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             }
 
             res["label"] = track.label_name();
-            res["stream-url"] = track.stream_url();
+            res["streamable"] = track.streamable();
+            res["stream-url"] = track.stream_url() + "?client_id=" + client_.config()->client_id;
             res["purchase-url"] = track.purchase_url();
             res["video-url"] = track.video_url();
             res["waveform"] = track.waveform();
@@ -195,7 +196,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             string duration = format_time(track.duration());
             string playback_count = format_fixed(track.playback_count());
             string favoritings_count = format_fixed(track.favoritings_count());
-            res["duration"] = duration;
+            res["duration"] = (int) (track.duration() / 1000);
             res["playback-count"] = playback_count;
             res["favoritings-count"] = favoritings_count;
 

@@ -1,3 +1,4 @@
+#include <scope/localization.h>
 #include <scope/preview.h>
 
 #include <unity/scopes/ColumnLayout.h>
@@ -21,41 +22,74 @@ void Preview::cancelled() {
 }
 
 void Preview::run(sc::PreviewReplyProxy const& reply) {
+    auto const res = result();
+
     // Support three different column layouts
     sc::ColumnLayout layout1col(1), layout2col(2), layout3col(3);
 
     // Single column layout
-    layout1col.add_column( { "image", "header", "summary" });
-
-    // Two column layout
-    layout2col.add_column( { "image" });
-    layout2col.add_column( { "header", "summary" });
-
-    // Three cokumn layout
-    layout3col.add_column( { "image" });
-    layout3col.add_column( { "header", "summary" });
-    layout3col.add_column( { });
+    layout1col.add_column( { "header", "art", "statistics", "tracks", "actions", "description" });
 
     // Register the layouts we just created
-    reply->register_layout( { layout1col, layout2col, layout3col });
+    reply->register_layout( { layout1col }); //, layout2col, layout3col
 
-    // Define the header section
     sc::PreviewWidget header("header", "header");
-    // It has title and a subtitle properties
     header.add_attribute_mapping("title", "title");
-    header.add_attribute_mapping("subtitle", "subtitle");
+    header.add_attribute_mapping("subtitle", "username");
 
-    // Define the image section
-    sc::PreviewWidget image("image", "image");
-    // It has a single source property, mapped to the result's art property
-    image.add_attribute_mapping("source", "art");
+    sc::PreviewWidget art("art", "image");
+    art.add_attribute_mapping("source", "art");
 
-    // Define the summary section
-    sc::PreviewWidget description("summary", "text");
-    // It has a text property, mapped to the result's description property
+    sc::PreviewWidget statistics("statistics", "header");
+    statistics.add_attribute_value("title", sc::Variant(u8"\u25B6 " + res["playback-count"].get_string() + u8"   \u261d " + res["favoritings-count"].get_string()));
+
+    sc::PreviewWidget tracks("tracks", "audio");
+    {
+        if (res["streamable"].get_bool()) {
+            sc::VariantBuilder builder;
+            builder.add_tuple({
+                    {"title", sc::Variant(res.title())},
+                    {"source", sc::Variant(res["stream-url"])},
+                    {"length", res["duration"]}
+                });
+            tracks.add_attribute_value("tracks", builder.end());
+        }
+    }
+
+    sc::PreviewWidget actions("actions", "actions");
+    {
+        string purchase_url = res["purchase-url"].get_string();
+        if (!purchase_url.empty()) {
+            sc::VariantBuilder builder;
+            builder.add_tuple({
+                    {"id", sc::Variant("buy")},
+                    {"label", sc::Variant(_("Buy"))},
+                    {"uri", sc::Variant(purchase_url)}
+                });
+            actions.add_attribute_value("actions", builder.end());
+        }
+        string video_url = res["video-url"].get_string();
+        if (!video_url.empty()) {
+            sc::VariantBuilder builder;
+            builder.add_tuple({
+                    {"id", sc::Variant("video")},
+                    {"label", sc::Variant(_("Watch video"))},
+                    {"uri", sc::Variant(video_url)}
+                });
+            actions.add_attribute_value("actions", builder.end());
+        }
+        {
+            sc::VariantBuilder builder;
+            builder.add_tuple({
+                    {"id", sc::Variant("play")},
+                    {"label", sc::Variant(_("Play in browser"))}
+                });
+            actions.add_attribute_value("actions", builder.end());
+        }
+    }
+
+    sc::PreviewWidget description("description", "text");
     description.add_attribute_mapping("text", "description");
 
-    // Push each of the sections
-    reply->push( { image, header, description });
+    reply->push( { header, art, statistics, tracks, actions, description });
 }
-
