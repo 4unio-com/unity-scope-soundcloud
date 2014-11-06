@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: unity-scope-soundcloud\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-11-05 11:43+0000\n"
+"POT-Creation-Date: 2014-11-06 15:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,202 +17,214 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/scope/query.cpp:51
+#: src/scope/query.cpp:59
 msgid "Popular Audio"
 msgstr ""
 
-#: src/scope/query.cpp:52
+#: src/scope/query.cpp:60
 msgid "Audiobooks"
 msgstr ""
 
-#: src/scope/query.cpp:52
+#: src/scope/query.cpp:60
 msgid "Business"
 msgstr ""
 
-#: src/scope/query.cpp:52
+#: src/scope/query.cpp:60
 msgid "Comedy"
 msgstr ""
 
-#: src/scope/query.cpp:52
+#: src/scope/query.cpp:60
 msgid "Entertainment"
 msgstr ""
 
-#: src/scope/query.cpp:53
+#: src/scope/query.cpp:61
 msgid "Learning"
 msgstr ""
 
-#: src/scope/query.cpp:53
+#: src/scope/query.cpp:61
 msgid "News & Politics"
 msgstr ""
 
-#: src/scope/query.cpp:53
+#: src/scope/query.cpp:61
 msgid "Religion & Spirituality"
 msgstr ""
 
-#: src/scope/query.cpp:54
+#: src/scope/query.cpp:62
 msgid "Science"
 msgstr ""
 
-#: src/scope/query.cpp:54
+#: src/scope/query.cpp:62
 msgid "Sports"
 msgstr ""
 
-#: src/scope/query.cpp:54
+#: src/scope/query.cpp:62
 msgid "Storytelling"
 msgstr ""
 
-#: src/scope/query.cpp:54
+#: src/scope/query.cpp:62
 msgid "Technology"
 msgstr ""
 
-#: src/scope/query.cpp:65
+#: src/scope/query.cpp:73
 msgid "Popular Music"
 msgstr ""
 
-#: src/scope/query.cpp:66
+#: src/scope/query.cpp:74
 msgid "Alternative Rock"
 msgstr ""
 
-#: src/scope/query.cpp:66
+#: src/scope/query.cpp:74
 msgid "Ambient"
 msgstr ""
 
-#: src/scope/query.cpp:66
+#: src/scope/query.cpp:74
 msgid "Classical"
 msgstr ""
 
-#: src/scope/query.cpp:66
+#: src/scope/query.cpp:74
 msgid "Country"
 msgstr ""
 
-#: src/scope/query.cpp:67
+#: src/scope/query.cpp:75
 msgid "Dance"
 msgstr ""
 
-#: src/scope/query.cpp:67
+#: src/scope/query.cpp:75
 msgid "Deep House"
 msgstr ""
 
-#: src/scope/query.cpp:67
+#: src/scope/query.cpp:75
 msgid "Disco"
 msgstr ""
 
-#: src/scope/query.cpp:67
+#: src/scope/query.cpp:75
 msgid "Drum & Bass"
 msgstr ""
 
-#: src/scope/query.cpp:67
+#: src/scope/query.cpp:75
 msgid "Dubstep"
 msgstr ""
 
-#: src/scope/query.cpp:68
+#: src/scope/query.cpp:76
 msgid "Electro"
 msgstr ""
 
-#: src/scope/query.cpp:68
+#: src/scope/query.cpp:76
 msgid "Electronic"
 msgstr ""
 
-#: src/scope/query.cpp:68
+#: src/scope/query.cpp:76
 msgid "Folk"
 msgstr ""
 
-#: src/scope/query.cpp:68
+#: src/scope/query.cpp:76
 msgid "Hardcore Techno"
 msgstr ""
 
-#: src/scope/query.cpp:69
+#: src/scope/query.cpp:77
 msgid "Hip Hop"
 msgstr ""
 
-#: src/scope/query.cpp:69
+#: src/scope/query.cpp:77
 msgid "House"
 msgstr ""
 
-#: src/scope/query.cpp:69
+#: src/scope/query.cpp:77
 msgid "Indie Rock"
 msgstr ""
 
-#: src/scope/query.cpp:69
+#: src/scope/query.cpp:77
 msgid "Jazz"
 msgstr ""
 
-#: src/scope/query.cpp:69
+#: src/scope/query.cpp:77
 msgid "Latin"
 msgstr ""
 
-#: src/scope/query.cpp:70
+#: src/scope/query.cpp:78
 msgid "Metal"
 msgstr ""
 
-#: src/scope/query.cpp:70
+#: src/scope/query.cpp:78
 msgid "Minimal Techno"
 msgstr ""
 
-#: src/scope/query.cpp:70
+#: src/scope/query.cpp:78
 msgid "Piano"
 msgstr ""
 
-#: src/scope/query.cpp:70
+#: src/scope/query.cpp:78
 msgid "Pop"
 msgstr ""
 
-#: src/scope/query.cpp:71
+#: src/scope/query.cpp:79
 msgid "Progressive House"
 msgstr ""
 
-#: src/scope/query.cpp:71
+#: src/scope/query.cpp:79
 msgid "Punk"
 msgstr ""
 
-#: src/scope/query.cpp:71
+#: src/scope/query.cpp:79
 msgid "R&B"
 msgstr ""
 
-#: src/scope/query.cpp:71
+#: src/scope/query.cpp:79
 msgid "Rap"
 msgstr ""
 
-#: src/scope/query.cpp:72
+#: src/scope/query.cpp:80
 msgid "Reggae"
 msgstr ""
 
-#: src/scope/query.cpp:72
+#: src/scope/query.cpp:80
 msgid "Rock"
 msgstr ""
 
-#: src/scope/query.cpp:72
+#: src/scope/query.cpp:80
 msgid "Singer-Songwriter"
 msgstr ""
 
-#: src/scope/query.cpp:72
+#: src/scope/query.cpp:80
 msgid "Soul"
 msgstr ""
 
-#: src/scope/query.cpp:73
+#: src/scope/query.cpp:81
 msgid "Tech House"
 msgstr ""
 
-#: src/scope/query.cpp:73
+#: src/scope/query.cpp:81
 msgid "Techno"
 msgstr ""
 
-#: src/scope/query.cpp:73
+#: src/scope/query.cpp:81
 msgid "Trance"
 msgstr ""
 
-#: src/scope/query.cpp:73
+#: src/scope/query.cpp:81
 msgid "Trap"
 msgstr ""
 
-#: src/scope/query.cpp:74
+#: src/scope/query.cpp:82
 msgid "Trip Hop"
 msgstr ""
 
-#: src/scope/query.cpp:74
+#: src/scope/query.cpp:82
 msgid "World"
 msgstr ""
 
-#: src/scope/query.cpp:94
-msgid "Soundcloud"
+#: src/scope/query.cpp:165
+msgid "Explore"
+msgstr ""
+
+#: src/scope/preview.cpp:66
+msgid "Buy"
+msgstr ""
+
+#: src/scope/preview.cpp:76
+msgid "Watch video"
+msgstr ""
+
+#: src/scope/preview.cpp:85
+msgid "Play in browser"
 msgstr ""
