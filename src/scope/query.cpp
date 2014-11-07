@@ -175,8 +175,6 @@ void Query::run(sc::SearchReplyProxy const& reply) {
                     { SP::query, query_string }, { SP::limit, "30" } });
         }
 
-
-
         for (const auto &track : get_or_throw(tracks_future)) {
             sc::CategorisedResult res(cat);
 
@@ -198,18 +196,16 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             res["description"] = track.description();
 
             string duration = format_time(track.duration());
-            string playback_count = format_fixed(track.playback_count());
-            string favoritings_count = format_fixed(track.favoritings_count());
+            string playback_count = u8"\u25B6 " + format_fixed(track.playback_count());
+            string favoritings_count = u8"\u2665 " + format_fixed(track.favoritings_count());
             res["duration"] = (int) (track.duration() / 1000);
             res["playback-count"] = playback_count;
             res["favoritings-count"] = favoritings_count;
 
             sc::VariantBuilder builder;
             builder.add_tuple({{"value", sc::Variant(duration)}});
-            builder.add_tuple({{"value", sc::Variant(playback_count)},
-                {"icon", sc::Variant(client_.config()->directory + "/plays.png")}});
-            builder.add_tuple({{"value", sc::Variant(favoritings_count)},
-                {"icon", sc::Variant(client_.config()->directory + "/likes.png")}});
+            builder.add_tuple({{"value", sc::Variant(playback_count)}});
+            builder.add_tuple({{"value", sc::Variant(favoritings_count)}});
             res["attributes"] = builder.end();
 
             if (!reply->push(res)) {

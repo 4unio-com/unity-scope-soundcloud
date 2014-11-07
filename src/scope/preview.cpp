@@ -41,7 +41,7 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
     art.add_attribute_mapping("source", "art");
 
     sc::PreviewWidget statistics("statistics", "header");
-    statistics.add_attribute_value("title", sc::Variant(u8"\u25B6 " + res["playback-count"].get_string() + u8"   \u261d " + res["favoritings-count"].get_string()));
+    statistics.add_attribute_value("title", sc::Variant(res["playback-count"].get_string() + "   " + res["favoritings-count"].get_string()));
 
     sc::PreviewWidget tracks("tracks", "audio");
     {
