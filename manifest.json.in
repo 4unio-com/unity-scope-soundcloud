@@ -18,5 +18,5 @@
     "maintainer": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
     "name": "com.ubuntu.scopes.soundcloud",
     "title": "Soundcloud scope",
-    "version": "0.1"
+    "version": "@SCOPE_VERSION@"
 }

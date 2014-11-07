@@ -65,11 +65,10 @@ set(UBUNTU_MANIFEST_PATH "manifest.json.in" CACHE INTERNAL "Tells QtCreator loca
 set(UBUNTU_PROJECT_TYPE "Scope" CACHE INTERNAL "Tells QtCreator this is a Scope project")
 
 # Important project paths
+set(SCOPE_VERSION "1.0.0-${BZR_REVNO}")
 set(CMAKE_INSTALL_PREFIX /)
 set(SCOPE_INSTALL_DIR "/soundcloud")
 set(GETTEXT_PACKAGE "unity-scope-soundcloud")
-
-# Important variables
 set(PACKAGE_NAME "com.ubuntu.scopes.soundcloud")
 set(SCOPE_NAME "${SCOPE_NAME}_soundcloud")
 set(ACCOUNTS_NAME "${SCOPE_NAME}_accounts")
@@ -124,10 +123,12 @@ add_subdirectory(data)
 add_subdirectory(po)
 
 # Set up the tests
-enable_testing()
-add_subdirectory(tests)
-add_custom_target(
-  check
-  ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure
-)
+if(NOT CLICK_MODE)
+  enable_testing()
+  add_subdirectory(tests)
+  add_custom_target(
+    check
+    ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure
+  )
+endif()
 
