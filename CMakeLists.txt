@@ -49,6 +49,17 @@ include_directories(
   ${SCOPE_INCLUDE_DIRS}
 )
 
+# Handy!
+function(configure_scope_files)
+  foreach(_file ${ARGV})
+    configure_file(
+      "${_file}.in"
+      "${CMAKE_CURRENT_BINARY_DIR}/${_file}"
+      @ONLY
+    )
+  endforeach()
+endfunction()
+
 # Do not remove this line, its required for the correct functionality of the Ubuntu-SDK
 set(UBUNTU_MANIFEST_PATH "manifest.json.in" CACHE INTERNAL "Tells QtCreator location and name of the manifest file")
 set(UBUNTU_PROJECT_TYPE "Scope" CACHE INTERNAL "Tells QtCreator this is a Scope project")
@@ -58,9 +69,15 @@ set(CMAKE_INSTALL_PREFIX /)
 set(SCOPE_INSTALL_DIR "/soundcloud")
 set(GETTEXT_PACKAGE "unity-scope-soundcloud")
 
+# Important variables
+set(PACKAGE_NAME "com.ubuntu.scopes.soundcloud")
+set(SCOPE_NAME "${SCOPE_NAME}_soundcloud")
+set(ACCOUNTS_NAME "${SCOPE_NAME}_accounts")
+
 # If we need to refer to the scope's name or package in code, these definitions will help
-add_definitions(-DPACKAGE_NAME="com.ubuntu.scopes.soundcloud")
-add_definitions(-DSCOPE_NAME="com.ubuntu.scopes.soundcloud_soundcloud")
+add_definitions(-DPACKAGE_NAME="${PACKAGE_NAME}")
+add_definitions(-DSCOPE_NAME="${SCOPE_NAME}")
+add_definitions(-DACCOUNTS_NAME="${ACCOUNTS_NAME}")
 add_definitions(-DGETTEXT_PACKAGE="${GETTEXT_PACKAGE}")
 
 #This command figures out the target architecture and puts it into the manifest file
@@ -70,11 +87,28 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-configure_file(manifest.json.in ${CMAKE_CURRENT_BINARY_DIR}/manifest.json)
+configure_scope_files(
+  manifest.json
+  soundcloud.provider
+  soundcloud.service
+  soundcloud.application
+)
 
 # Install the click manifest
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/manifest.json DESTINATION "/")
-install(FILES "soundcloud.apparmor" DESTINATION "/")
+install(
+  FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/manifest.json"
+    "soundcloud.apparmor"
+    "${CMAKE_CURRENT_BINARY_DIR}/soundcloud.provider"
+    "${CMAKE_CURRENT_BINARY_DIR}/soundcloud.service"
+    "${CMAKE_CURRENT_BINARY_DIR}/soundcloud.application"
+  DESTINATION "/"
+)
+
+install(
+  DIRECTORY "qml-plugin"
+  DESTINATION "/"
+)
 
 # Make this file show up in QtCreator
 add_custom_target(hidden_files

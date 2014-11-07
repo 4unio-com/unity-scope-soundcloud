@@ -1,15 +1,22 @@
 {
     "architecture": "@CLICK_ARCH@",
-    "description": "A simple Unity scope that accesses the network",
+    "description": "Listen to your favourite tracks on Soundcloud",
     "framework": "ubuntu-sdk-14.10-dev2",
     "hooks": {
         "soundcloud": {
             "apparmor": "soundcloud.apparmor",
-            "scope": "soundcloud"
+            "scope": "soundcloud",
+            "account-application": "soundcloud.application",
+            "account-service": "soundcloud.service"
+        },
+        "accounts": {
+            "account-provider": "soundcloud.provider",
+            "account-qml-plugin": "qml-plugin"
         }
     },
+    "icon": "soundcloud/icon.png",
     "maintainer": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
     "name": "com.ubuntu.scopes.soundcloud",
-    "title": "Ubuntu Soundcloud scope",
+    "title": "Soundcloud scope",
     "version": "0.1"
 }
