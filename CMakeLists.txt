@@ -59,8 +59,8 @@ set(CMAKE_INSTALL_PREFIX /)
 set(SCOPE_INSTALL_DIR "/soundcloud")
 set(GETTEXT_PACKAGE "unity-scope-soundcloud")
 set(PACKAGE_NAME "com.ubuntu.scopes.soundcloud")
-set(SCOPE_NAME "${SCOPE_NAME}_soundcloud")
-set(ACCOUNTS_NAME "${SCOPE_NAME}_accounts")
+set(SCOPE_NAME "${PACKAGE_NAME}_soundcloud")
+set(SCOPE_ACCOUNTS_NAME "${PACKAGE_NAME}_accounts")
 
 # If we need to refer to the scope's name or package in code, these definitions will help
 add_definitions(-DPACKAGE_NAME="${PACKAGE_NAME}")
