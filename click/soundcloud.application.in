@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <application>
-  <description>Soundcloud scope</description>
+  <description>SoundCloud scope</description>
   <desktop-entry>@SCOPE_NAME@.desktop</desktop-entry>
   <services>
     <service id="@SCOPE_NAME@">
-      <description>Listen to your favourite tracks on Soundcloud</description>
+      <description>Listen to your favourite tracks on SoundCloud</description>
     </service>
   </services>
 </application>

@@ -1,6 +1,6 @@
 {
     "architecture": "@CLICK_ARCH@",
-    "description": "Listen to your favourite tracks on Soundcloud",
+    "description": "Listen to your favourite tracks on SoundCloud",
     "framework": "ubuntu-sdk-14.10-dev2",
     "hooks": {
         "soundcloud": {
@@ -17,6 +17,6 @@
     "icon": "soundcloud/icon.png",
     "maintainer": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
     "name": "com.ubuntu.scopes.soundcloud",
-    "title": "Soundcloud scope",
+    "title": "SoundCloud scope",
     "version": "@SCOPE_VERSION@"
 }

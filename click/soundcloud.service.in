@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <service>
   <type>sharing</type>
-  <name>Soundcloud scope</name>
+  <name>SoundCloud scope</name>
   <icon>soundcloud/icon.png</icon>
   <provider>@SCOPE_ACCOUNTS_NAME@</provider>
   <translations>unity-scope-soundcloud</translations>
