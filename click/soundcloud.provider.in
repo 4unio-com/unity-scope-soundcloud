@@ -10,18 +10,16 @@
   <template>
     <group name="auth">
       <setting name="method">oauth2</setting>
-      <setting name="mechanism">web_server</setting>
+      <setting name="mechanism">user_agent</setting>
       <group name="oauth2">
-        <group name="web_server">
+        <group name="user_agent">
           <setting name="Host">api.soundcloud.com</setting>
           <setting name="AuthPath">connect</setting>
           <setting name="TokenPath">oauth2/token</setting>
           <setting name="RedirectUri">https://wiki.ubuntu.com/</setting>
-          <setting name="ResponseType">code</setting>
-          <setting name="Display">popup</setting>
+          <setting name="ResponseType">token</setting>
           <setting type="as" name="Scope">['non-expiring']</setting>
           <setting name="ClientId">eadbbc8380aa72be1412e2abe5f8e4ca</setting>
-          <setting name="ClientSecret">7e1f2788c181ce1c0269ab0dfc42676e</setting>
           <setting type="as" name="AllowedSchemes">['https','http']</setting>
         </group>
       </group>
