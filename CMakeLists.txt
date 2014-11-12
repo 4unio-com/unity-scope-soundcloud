@@ -79,7 +79,7 @@ add_subdirectory(click)
 # Add our main directories
 add_subdirectory(src)
 add_subdirectory(data)
-#add_subdirectory(po)
+add_subdirectory(po)
 
 # Set up the tests
 if(NOT CLICK_MODE)
