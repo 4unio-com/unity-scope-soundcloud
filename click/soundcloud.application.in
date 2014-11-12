@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<application>
+<application id="@SCOPE_NAME@">
   <description>SoundCloud scope</description>
   <desktop-entry>@SCOPE_NAME@.desktop</desktop-entry>
   <services>

@@ -65,7 +65,7 @@ set(SCOPE_ACCOUNTS_NAME "${PACKAGE_NAME}_accounts")
 # If we need to refer to the scope's name or package in code, these definitions will help
 add_definitions(-DPACKAGE_NAME="${PACKAGE_NAME}")
 add_definitions(-DSCOPE_NAME="${SCOPE_NAME}")
-add_definitions(-DACCOUNTS_NAME="${ACCOUNTS_NAME}")
+add_definitions(-DSCOPE_ACCOUNTS_NAME="${SCOPE_ACCOUNTS_NAME}")
 add_definitions(-DGETTEXT_PACKAGE="${GETTEXT_PACKAGE}")
 
 #This command figures out the target architecture and puts it into the manifest file

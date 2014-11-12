@@ -71,7 +71,7 @@ void Scope::start(string const&) {
 
     if (getenv("SOUNDCLOUD_SCOPE_IGNORE_ACCOUNTS") == nullptr) {
         oa_client_.reset(new sc::OnlineAccountClient(
-            SCOPE_NAME, "sharing", ACCOUNTS_NAME));
+            SCOPE_NAME, "sharing", SCOPE_ACCOUNTS_NAME));
         oa_client_->set_service_update_callback(
             [this](sc::OnlineAccountClient::ServiceStatus const &) {
                 this->update_config();

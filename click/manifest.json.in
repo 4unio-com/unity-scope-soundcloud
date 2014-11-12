@@ -16,7 +16,7 @@
     },
     "icon": "soundcloud/icon.png",
     "maintainer": "Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>",
-    "name": "com.ubuntu.scopes.soundcloud",
+    "name": "@PACKAGE_NAME@",
     "title": "SoundCloud scope",
     "version": "@SCOPE_VERSION@"
 }

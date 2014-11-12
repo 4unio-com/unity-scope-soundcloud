@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<provider>
+<provider id="@SCOPE_ACCOUNTS_NAME@">
   <name>SoundCloud</name>
   <icon>soundcloud/icon.png</icon>
   <translations>unity-scope-soundcloud</translations>
