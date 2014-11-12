@@ -197,7 +197,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
 
         reply->register_departments(create_departments(query));
 
-        if (query_string.empty()) {
+        if (query_string.empty() && query.department_id().empty()) {
             if (client_.config()->authenticated) {
                 auto cat = reply->register_category(
                     "stream", _("Stream"), "",
