@@ -52,6 +52,22 @@ static deque<T> get_typed_list(const string &filter, const json::Value &root) {
     return results;
 }
 
+template<typename T>
+static deque<T> get_typed_activity_list(const string &filter, const json::Value &root) {
+    deque<T> results;
+    json::Value collection = root["collection"];
+    for (json::ArrayIndex index = 0; index < collection.size(); ++index) {
+        json::Value item = collection[index];
+
+        string activity_type = item["type"].asString();
+
+        if (activity_type == filter) {
+            results.emplace_back(T(item["origin"]));
+        }
+    }
+    return results;
+}
+
 }
 
 class Client::Priv {
@@ -83,8 +99,8 @@ public:
         http::Request::Configuration configuration;
         net::Uri::QueryParameters complete_parameters(parameters);
         if (config_->authenticated) {
-            configuration.header.add("Authorization",
-                    "Bearer " + config_->access_token);
+            complete_parameters.emplace_back(
+                "oauth_token", config_->access_token);
         } else {
             complete_parameters.emplace_back("client_id", config_->client_id);
         }
@@ -178,6 +194,18 @@ future<deque<Track>> Client::search_tracks(const std::deque<std::pair<SP, std::s
             [](const json::Value &root) {
                 return get_typed_list<Track>("track", root);
             });
+}
+
+future<deque<Track>> Client::stream_tracks(int limit) {
+    net::Uri::QueryParameters params;
+    if (limit > 0) {
+        params.emplace_back("limit", std::to_string(limit));
+    }
+    return p->async_get<deque<Track>>(
+        { "me/activities/tracks/affiliated.json" }, params,
+        [](const json::Value &root) {
+            return get_typed_activity_list<Track>("track", root);
+        });
 }
 
 void Client::cancel() {

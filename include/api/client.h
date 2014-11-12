@@ -58,6 +58,8 @@ public:
     virtual std::future<std::deque<Track>> search_tracks(
             const std::deque<std::pair<SP, std::string>> &parameters);
 
+    virtual std::future<std::deque<Track>> stream_tracks(int limit=0);
+
     /**
      * Cancel any pending queries (this method can be called from a different thread)
      */
