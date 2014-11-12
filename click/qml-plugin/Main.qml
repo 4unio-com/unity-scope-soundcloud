@@ -4,7 +4,7 @@ OAuthMain {
     creationComponent: OAuth {
         function completeCreation(reply) {
             var http = new XMLHttpRequest();
-            var url = "https://api.soundcloud.com/me?access_token=" + reply.AccessToken;
+            var url = "https://api.soundcloud.com/me.json?oauth_token=" + reply.AccessToken;
             http.open("GET", url, true);
             http.onreadystatechange = function() {
                 if (http.readyState === 4) {
