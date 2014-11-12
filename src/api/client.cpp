@@ -202,7 +202,7 @@ future<deque<Track>> Client::stream_tracks(int limit) {
         params.emplace_back("limit", std::to_string(limit));
     }
     return p->async_get<deque<Track>>(
-        { "me/activities/tracks/affiliated.json" }, params,
+        { "me", "activities", "tracks", "affiliated.json" }, params,
         [](const json::Value &root) {
             return get_typed_activity_list<Track>("track", root);
         });
