@@ -69,6 +69,8 @@ const static string SEARCH_CATEGORY_TEMPLATE =
 }
 )";
 
+// unconfuse emacs: "
+
 static const vector<string> AUDIO_DEPARTMENT_IDS { "Popular Audio",
         "Audiobooks", "Business", "Comedy", "Entertainment", "Learning",
         "News & Politics", "Religion & Spirituality", "Science", "Sports",

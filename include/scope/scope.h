@@ -19,9 +19,13 @@
 #ifndef SCOPE_SCOPE_H_
 #define SCOPE_SCOPE_H_
 
+#include <mutex>
+#include <condition_variable>
+
 #include <api/config.h>
 
 #include <unity/scopes/ScopeBase.h>
+#include <unity/scopes/OnlineAccountClient.h>
 #include <unity/scopes/QueryBase.h>
 #include <unity/scopes/ReplyProxyFwd.h>
 #include <unity/scopes/QueryBase.h>
@@ -63,7 +67,14 @@ public:
             unity::scopes::SearchMetadata const&) override;
 
 protected:
+    std::shared_ptr<unity::scopes::OnlineAccountClient> oa_client_;
+
+    std::mutex config_mutex_;
+    std::condition_variable config_cond_;
     api::Config::Ptr config_;
+
+    void init_config();
+    void update_config();
 };
 
 }
