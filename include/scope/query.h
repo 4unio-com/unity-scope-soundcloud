@@ -46,6 +46,11 @@ public:
     void run(const unity::scopes::SearchReplyProxy &reply) override;
 
 private:
+    void add_login_nag(const unity::scopes::SearchReplyProxy &reply);
+    bool push_track(const unity::scopes::SearchReplyProxy &reply,
+                    const unity::scopes::Category::SCPtr &category,
+                    const api::Track &track);
+
     api::Client client_;
 };
 

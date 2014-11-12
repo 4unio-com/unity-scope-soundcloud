@@ -24,6 +24,7 @@
 #include <unity/scopes/Annotation.h>
 #include <unity/scopes/CategorisedResult.h>
 #include <unity/scopes/CategoryRenderer.h>
+#include <unity/scopes/OnlineAccountClient.h>
 #include <unity/scopes/QueryBase.h>
 #include <unity/scopes/SearchReply.h>
 #include <unity/scopes/VariantBuilder.h>
@@ -69,6 +70,23 @@ const static string SEARCH_CATEGORY_TEMPLATE =
 }
 )";
 
+const static string SEARCH_CATEGORY_LOGIN_NAG = R"(
+{
+  "schema-version": 1,
+  "template": {
+    "category-layout": "grid",
+    "card-size": "large",
+    "card-background": "color:///#1ab7ea"
+  },
+  "components": {
+    "title": "title",
+    "background": "background",
+    "art" : {
+      "aspect-ratio": 100.0
+    }
+  }
+}
+)";
 // unconfuse emacs: "
 
 static const vector<string> AUDIO_DEPARTMENT_IDS { "Popular Audio",
@@ -179,6 +197,22 @@ void Query::run(sc::SearchReplyProxy const& reply) {
 
         reply->register_departments(create_departments(query));
 
+        if (query_string.empty()) {
+            if (client_.config()->authenticated) {
+                auto cat = reply->register_category(
+                    "stream", _("Stream"), "",
+                    sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
+                auto tracks_future = client_.stream_tracks(30);
+                for (const auto &track : get_or_throw(tracks_future)) {
+                    if (!push_track(reply, cat, track)) {
+                        return;
+                    }
+                }
+            } else {
+                add_login_nag(reply);
+            }
+        }
+
         sc::Category::SCPtr cat;
         future<deque<Track>> tracks_future;
         if (query_string.empty()) {
@@ -196,39 +230,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         }
 
         for (const auto &track : get_or_throw(tracks_future)) {
-            sc::CategorisedResult res(cat);
-
-            res.set_uri(track.permalink_url());
-            res.set_title(track.title());
-            if (track.artwork().empty()) {
-                res.set_art(track.artwork());
-            } else {
-                res.set_art(track.user().artwork());
-            }
-
-            res["label"] = track.label_name();
-            res["streamable"] = track.streamable();
-            res["stream-url"] = track.stream_url() + "?client_id=" + client_.config()->client_id;
-            res["purchase-url"] = track.purchase_url();
-            res["video-url"] = track.video_url();
-            res["waveform"] = track.waveform();
-            res["username"] = track.user().title();
-            res["description"] = track.description();
-
-            string duration = format_time(track.duration());
-            string playback_count = u8"\u25B6 " + format_fixed(track.playback_count());
-            string favoritings_count = u8"\u2665 " + format_fixed(track.favoritings_count());
-            res["duration"] = (int) (track.duration() / 1000);
-            res["playback-count"] = playback_count;
-            res["favoritings-count"] = favoritings_count;
-
-            sc::VariantBuilder builder;
-            builder.add_tuple({{"value", sc::Variant(duration)}});
-            builder.add_tuple({{"value", sc::Variant(playback_count)}});
-            builder.add_tuple({{"value", sc::Variant(favoritings_count)}});
-            res["attributes"] = builder.end();
-
-            if (!reply->push(res)) {
+            if (!push_track(reply, cat, track)) {
                 return;
             }
         }
@@ -239,3 +241,60 @@ void Query::run(sc::SearchReplyProxy const& reply) {
     }
 }
 
+bool Query::push_track(const sc::SearchReplyProxy &reply,
+                       const sc::Category::SCPtr &category,
+                       const Track &track) {
+    sc::CategorisedResult res(category);
+
+    res.set_uri(track.permalink_url());
+    res.set_title(track.title());
+    if (track.artwork().empty()) {
+        res.set_art(track.artwork());
+    } else {
+        res.set_art(track.user().artwork());
+    }
+
+    res["label"] = track.label_name();
+    res["streamable"] = track.streamable();
+    res["stream-url"] = track.stream_url() + "?client_id=" + client_.config()->client_id;
+    res["purchase-url"] = track.purchase_url();
+    res["video-url"] = track.video_url();
+    res["waveform"] = track.waveform();
+    res["username"] = track.user().title();
+    res["description"] = track.description();
+
+    string duration = format_time(track.duration());
+    string playback_count = u8"\u25B6 " + format_fixed(track.playback_count());
+    string favoritings_count = u8"\u2665 " + format_fixed(track.favoritings_count());
+    res["duration"] = (int) (track.duration() / 1000);
+    res["playback-count"] = playback_count;
+    res["favoritings-count"] = favoritings_count;
+
+    sc::VariantBuilder builder;
+    builder.add_tuple({{"value", sc::Variant(duration)}});
+    builder.add_tuple({{"value", sc::Variant(playback_count)}});
+    builder.add_tuple({{"value", sc::Variant(favoritings_count)}});
+    res["attributes"] = builder.end();
+
+    return reply->push(res);
+}
+
+void Query::add_login_nag(const sc::SearchReplyProxy &reply) {
+    if (getenv("SOUNDCLOUD_SCOPE_IGNORE_ACCOUNTS")) {
+        return;
+    }
+
+    sc::CategoryRenderer rdr(SEARCH_CATEGORY_LOGIN_NAG);
+    auto cat = reply->register_category("soundcloud_login_nag", "", "", rdr);
+
+    sc::CategorisedResult res(cat);
+    res.set_title(_("Log-in to SoundCloud"));
+
+    sc::OnlineAccountClient oa_client(SCOPE_NAME, "sharing", ACCOUNTS_NAME);
+    oa_client.register_account_login_item(res,
+                                          query(),
+                                          sc::OnlineAccountClient::InvalidateResults,
+                                          sc::OnlineAccountClient::DoNothing);
+
+    reply->push(res);
+}

@@ -43,7 +43,7 @@ void Scope::update_config() {
     std::lock_guard<std::mutex> lock(config_mutex_);
     init_config();
 
-    for (auto const& status: oa_client_->get_service_statuses()) {
+    for (auto const& status : oa_client_->get_service_statuses()) {
         if (status.service_authenticated) {
             config_->authenticated = true;
             config_->access_token = status.access_token;
