@@ -98,7 +98,12 @@ void Scope::stop() {
 
 sc::SearchQueryBase::UPtr Scope::search(const sc::CannedQuery &query,
                                         const sc::SearchMetadata &metadata) {
-    return sc::SearchQueryBase::UPtr(new Query(query, metadata, config_));
+    shared_ptr<Config> config;
+    {
+        std::lock_guard<std::mutex> lock(config_mutex_);
+        config = config_;
+    }
+    return sc::SearchQueryBase::UPtr(new Query(query, metadata, config));
 }
 
 sc::PreviewQueryBase::UPtr Scope::preview(sc::Result const& result,
