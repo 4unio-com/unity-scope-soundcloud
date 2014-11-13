@@ -32,6 +32,7 @@ using namespace scope;
 
 void Scope::init_config() {
     config_ = make_shared<Config>();
+    config_->directory = scope_directory();
     // Under test we set a different API root
     char *apiroot = getenv("NETWORK_SCOPE_APIROOT");
     if (apiroot) {
@@ -61,9 +62,6 @@ void Scope::update_config() {
 }
 
 void Scope::start(string const&) {
-    config_ = make_shared<Config>();
-    config_->directory = scope_directory();
-
     setlocale(LC_ALL, "");
     string translation_directory = ScopeBase::scope_directory()
             + "/../share/locale/";
