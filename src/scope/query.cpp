@@ -248,7 +248,7 @@ bool Query::push_track(const sc::SearchReplyProxy &reply,
 
     res.set_uri(track.permalink_url());
     res.set_title(track.title());
-    if (track.artwork().empty()) {
+    if (!track.artwork().empty()) {
         res.set_art(track.artwork());
     } else {
         res.set_art(track.user().artwork());
