@@ -11,6 +11,7 @@ def read_file(path):
         with open(file, 'rb') as fp:
             content = fp.read()
     else:
+        sys.stderr.write("Could not find file {}\n".format(file))
         content = b''
 
     return content

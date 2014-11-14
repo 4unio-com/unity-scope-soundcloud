@@ -82,7 +82,7 @@ add_subdirectory(data)
 add_subdirectory(po)
 
 # Set up the tests
-if(NOT CLICK_MODE)
+if(NOT CMAKE_CROSSCOMPILING)
   enable_testing()
   add_subdirectory(tests)
   add_custom_target(
