@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import gzip
 import http.server
 import os
 import sys
@@ -36,19 +37,21 @@ class MyRequestHandler(http.server.BaseHTTPRequestHandler):
     def handle_track_search(self, query):
         self.send_response(200)
         self.send_header("Content-type", "application/json")
+        self.send_header("Content-Encoding", "gzip")
         self.end_headers()
         if query.get('q'):
-            self.wfile.write(
-                read_file('search/{}.json'.format(query['q'])))
+            self.wfile.write(gzip.compress(
+                read_file('search/{}.json'.format(query['q']))))
         else:
-            self.wfile.write(
-                read_file('genre/{}.json'.format(query['genres'])))
+            self.wfile.write(gzip.compress(
+                read_file('genre/{}.json'.format(query['genres']))))
 
     def handle_activity(self, query):
         self.send_response(200)
         self.send_header("Content-type", "application/json")
+        self.send_header("Content-Encoding", "gzip")
         self.end_headers()
-        self.wfile.write(read_file('activity/tracks.json'))
+        self.wfile.write(gzip.compress(read_file('activity/tracks.json')))
 
 def main(argv):
     server = http.server.HTTPServer(("127.0.0.1", 0), MyRequestHandler)
