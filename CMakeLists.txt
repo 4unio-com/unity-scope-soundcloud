@@ -50,7 +50,7 @@ include_directories(
 )
 
 # Do not remove this line, its required for the correct functionality of the Ubuntu-SDK
-set(UBUNTU_MANIFEST_PATH "manifest.json.in" CACHE INTERNAL "Tells QtCreator location and name of the manifest file")
+set(UBUNTU_MANIFEST_PATH "click/manifest.json.in" CACHE INTERNAL "Tells QtCreator location and name of the manifest file")
 set(UBUNTU_PROJECT_TYPE "Scope" CACHE INTERNAL "Tells QtCreator this is a Scope project")
 
 # Important project paths
@@ -68,7 +68,7 @@ add_definitions(-DSCOPE_NAME="${SCOPE_NAME}")
 add_definitions(-DSCOPE_ACCOUNTS_NAME="${SCOPE_ACCOUNTS_NAME}")
 add_definitions(-DGETTEXT_PACKAGE="${GETTEXT_PACKAGE}")
 
-#This command figures out the target architecture and puts it into the manifest file
+# This command figures out the target architecture and puts it into the manifest file
 execute_process(
   COMMAND dpkg-architecture -qDEB_HOST_ARCH
   OUTPUT_VARIABLE CLICK_ARCH
