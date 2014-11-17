@@ -89,15 +89,15 @@ const static string SEARCH_CATEGORY_LOGIN_NAG = R"(
 )";
 // unconfuse emacs: "
 
-static const vector<string> AUDIO_DEPARTMENT_IDS { "Popular Audio",
-        "Audiobooks", "Business", "Comedy", "Entertainment", "Learning",
-        "News & Politics", "Religion & Spirituality", "Science", "Sports",
-        "Storytelling", "Technology" };
+static const vector<string> AUDIO_DEPARTMENT_IDS { "Audiobooks", "Business",
+        "Comedy", "Entertainment", "Learning", "News & Politics",
+        "Religion & Spirituality", "Science", "Sports", "Storytelling",
+        "Technology" };
 
-static const vector<string> AUDIO_DEPARTMENT_NAMES { _("Popular Audio"), _(
-        "Audiobooks"), _("Business"), _("Comedy"), _("Entertainment"), _(
-        "Learning"), _("News & Politics"), _("Religion & Spirituality"), _(
-        "Science"), _("Sports"), _("Storytelling"), _("Technology") };
+static const vector<string> AUDIO_DEPARTMENT_NAMES { _("Audiobooks"), _(
+        "Business"), _("Comedy"), _("Entertainment"), _("Learning"), _(
+        "News & Politics"), _("Religion & Spirituality"), _("Science"), _(
+        "Sports"), _("Storytelling"), _("Technology") };
 
 static const vector<string> MUSIC_DEPARTMENT_IDS { "Popular Music",
         "Alternative Rock", "Ambient", "Classical", "Country", "Dance",
@@ -108,7 +108,7 @@ static const vector<string> MUSIC_DEPARTMENT_IDS { "Popular Music",
         "Singer-Songwriter", "Soul", "Tech House", "Techno", "Trance", "Trap",
         "Trip Hop", "World" };
 
-static const vector<string> MUSIC_DEPARTMENT_NAMES { _("Popular Music"), _(
+static const vector<string> MUSIC_DEPARTMENT_NAMES { _("Home"), _(
         "Alternative Rock"), _("Ambient"), _("Classical"), _("Country"), _(
         "Dance"), _("Deep House"), _("Disco"), _("Drum & Bass"), _("Dubstep"),
         _("Electro"), _("Electronic"), _("Folk"), _("Hardcore Techno"), _(
@@ -197,40 +197,55 @@ void Query::run(sc::SearchReplyProxy const& reply) {
 
         reply->register_departments(create_departments(query));
 
+        // Avoid blocking on HTTP requests at this point
+
+        sc::Category::SCPtr first_cat;
+        future<deque<Track>> stream_future;
+        bool reading_stream = false;
         if (query_string.empty() && query.department_id().empty()) {
             if (client_.config()->authenticated) {
-                auto cat = reply->register_category(
+                first_cat = reply->register_category(
                     "stream", _("Stream"), "",
                     sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
-                auto tracks_future = client_.stream_tracks(30);
-                for (const auto &track : get_or_throw(tracks_future)) {
-                    if (!push_track(reply, cat, track)) {
-                        return;
-                    }
-                }
+                stream_future = client_.stream_tracks(30);
+                reading_stream = true;
             } else {
                 add_login_nag(reply);
             }
         }
 
-        sc::Category::SCPtr cat;
+        sc::Category::SCPtr second_cat;
         future<deque<Track>> tracks_future;
         if (query_string.empty()) {
-            cat = reply->register_category("explore", _("Explore"), "",
+            second_cat = reply->register_category("explore", _("Explore"), "",
                     sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
-            tracks_future = client_.search_tracks( {
-                    { SP::query, query_string }, { SP::genre,
-                            department_to_category(query.department_id()) }, {
-                            SP::limit, "15" } });
+            tracks_future = client_.search_tracks({
+                { SP::query, query_string },
+                { SP::limit, "15" },
+                { SP::genre, department_to_category(query.department_id()) },
+                { SP::order, "hotness" }
+            });
         } else {
-            cat = reply->register_category("search", "", "",
+            second_cat = reply->register_category("search", "", "",
                     sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
             tracks_future = client_.search_tracks( {
-                    { SP::query, query_string }, { SP::limit, "30" } });
+                { SP::query, query_string },
+                { SP::limit, "30" }
+            });
+        }
+
+        // Now we come to wait for the results
+
+        if (reading_stream) {
+            for (const auto &track : get_or_throw(stream_future)) {
+                if (!push_track(reply, first_cat, track)) {
+                    return;
+                }
+            }
         }
 
         for (const auto &track : get_or_throw(tracks_future)) {
-            if (!push_track(reply, cat, track)) {
+            if (!push_track(reply, second_cat, track)) {
                 return;
             }
         }

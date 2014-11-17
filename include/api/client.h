@@ -40,7 +40,7 @@ namespace api {
  * Search parameters
  */
 enum class SP {
-    genre, limit, query
+    genre, limit, order, query
 };
 
 /**

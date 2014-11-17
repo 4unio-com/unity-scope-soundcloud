@@ -27,6 +27,8 @@
 #include <core/net/http/response.h>
 #include <json/json.h>
 
+#include <algorithm>
+
 namespace http = core::net::http;
 namespace io = boost::iostreams;
 namespace json = Json;
@@ -108,7 +110,6 @@ public:
         net::Uri uri = net::make_uri(config_->apiroot, path,
                 complete_parameters);
         configuration.uri = client_->uri_to_string(uri);
-        cerr << "URI: " << configuration.uri << endl;
         configuration.header.add("User-Agent", config_->user_agent + " (gzip)");
         configuration.header.add("Accept-Encoding", "gzip");
 
@@ -176,6 +177,7 @@ Client::Client(Config::Ptr config) :
 }
 
 future<deque<Track>> Client::search_tracks(const std::deque<std::pair<SP, std::string>> &parameters) {
+    bool sort = false;
     net::Uri::QueryParameters params;
     for(const auto &p: parameters) {
         switch(p.first){
@@ -185,14 +187,26 @@ future<deque<Track>> Client::search_tracks(const std::deque<std::pair<SP, std::s
         case SP::limit:
             params.emplace_back(make_pair("limit", p.second));
             break;
+        case SP::order:
+            sort = true;
+            break;
         case SP::query:
             params.emplace_back(make_pair("q", p.second));
             break;
         }
     }
+
     return p->async_get<deque<Track>>( { "tracks.json" }, params,
-            [](const json::Value &root) {
-                return get_typed_list<Track>("track", root);
+            [sort](const json::Value &root) {
+                auto results = get_typed_list<Track>("track", root);
+                // Unfortunately SoundCloud doesn't support ordering by hotness any more
+                // See excuse on developer blog: https://developers.soundcloud.com/blog/removing-hotness-param
+                if (sort) {
+                    stable_sort(results.begin(), results.end(), [](const Track &i, const Track &j) {
+                                return i.playback_count() > j.playback_count();
+                            });
+                }
+                return results;
             });
 }
 
