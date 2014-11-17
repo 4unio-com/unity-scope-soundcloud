@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<provider id="@SCOPE_ACCOUNTS_NAME@">
+<provider>
   <name>SoundCloud</name>
   <icon>soundcloud/icon.png</icon>
-  <translations>unity-scope-soundcloud</translations>
+  <translations>@GETTEXT_PACKAGE@</translations>
   <plugin>generic-oauth</plugin>
   <domains>.*soundcloud\.com</domains>
   <single-account>true</single-account>
