@@ -76,7 +76,7 @@ const static string SEARCH_CATEGORY_LOGIN_NAG = R"(
   "template": {
     "category-layout": "grid",
     "card-size": "large",
-    "card-background": "color:///#1ab7ea"
+    "card-background": "color:///#ff4200"
   },
   "components": {
     "title": "title",
