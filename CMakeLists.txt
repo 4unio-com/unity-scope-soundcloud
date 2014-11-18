@@ -22,8 +22,8 @@ add_definitions(
 )
 
 include(GNUInstallDirs)
-find_package(PkgConfig)
-find_package(Intltool)
+find_package(PkgConfig REQUIRED)
+find_package(Intltool REQUIRED)
 
 # We depend on Boost for string trimming
 find_package(
