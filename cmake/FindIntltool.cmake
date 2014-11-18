@@ -221,7 +221,7 @@ function(INTLTOOL_MERGE_TRANSLATIONS FILENAME OUTPUT_FILE)
         OUTPUT
           ${OUTPUT_FILE}
         COMMAND
-          ${INTLTOOL_MERGE_EXECUTABLE} --desktop-style ${_UTF8} ${_PASS_THROUGH} ${_PO_DIRECTORY} ${FILENAME} ${OUTPUT_FILE}
+          ${INTLTOOL_MERGE_EXECUTABLE} --desktop-style --quiet ${_UTF8} ${_PASS_THROUGH} ${_PO_DIRECTORY} ${FILENAME} ${OUTPUT_FILE}
         DEPENDS
           ${FILENAME}
           ${_PO_FILES}
