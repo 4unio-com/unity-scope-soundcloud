@@ -177,6 +177,19 @@ function(INTLTOOL_INSTALL_TRANSLATIONS)
         ${CMAKE_CURRENT_SOURCE_DIR}/*.po
     )
 
+    get_filename_component(_ABS_POT_FILE ${_POT_FILE} ABSOLUTE)
+
+    foreach(_PO_FILE ${_PO_FILES})
+        add_custom_command(
+           OUTPUT
+             ${_PO_FILE}
+           COMMAND
+             ${GETTEXT_MSGMERGE_EXECUTABLE} --quiet --update --backup=none -s ${_PO_FILE} ${_ABS_POT_FILE}
+           DEPENDS
+             ${_ABS_POT_FILE}
+        )
+    endforeach()
+
     if(_ARG_ALL)
         gettext_create_translations(
           ${_POT_FILE}
@@ -196,6 +209,8 @@ function(INTLTOOL_MERGE_TRANSLATIONS FILENAME OUTPUT_FILE)
     set(_oneValueArgs PO_DIRECTORY)
 
     cmake_parse_arguments(_ARG "${_options}" "${_oneValueArgs}" "" ${ARGN})
+
+    get_filename_component(_ABS_FILENAME ${FILENAME} ABSOLUTE)
 
     set(_PO_DIRECTORY "${CMAKE_SOURCE_DIR}/po")
     if(_ARG_PO_DIRECTORY)
@@ -223,7 +238,7 @@ function(INTLTOOL_MERGE_TRANSLATIONS FILENAME OUTPUT_FILE)
         COMMAND
           ${INTLTOOL_MERGE_EXECUTABLE} --desktop-style --quiet ${_UTF8} ${_PASS_THROUGH} ${_PO_DIRECTORY} ${FILENAME} ${OUTPUT_FILE}
         DEPENDS
-          ${FILENAME}
+          ${_ABS_FILENAME}
           ${_PO_FILES}
         WORKING_DIRECTORY
           ${CMAKE_CURRENT_SOURCE_DIR}
