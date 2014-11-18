@@ -1,9 +1,9 @@
 [ScopeConfig]
-DisplayName = SoundCloud
-Description = SoundCloud scope for Unity8
-Art = screenshot.png
-Author = Canonical Ltd.
-Icon = icon.png
+_DisplayName=SoundCloud
+_Description=SoundCloud scope for Unity8
+Art=screenshot.png
+Author=Canonical Ltd.
+Icon=icon.png
 
 [Appearance]
 ForegroundColor = #ff2a2a2a

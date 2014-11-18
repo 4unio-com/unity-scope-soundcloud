@@ -1,7 +1,14 @@
 
+intltool_merge_translations(
+  "${CMAKE_CURRENT_SOURCE_DIR}/${SCOPE_NAME}.ini.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/${SCOPE_NAME}.ini"
+  ALL
+  UTF8
+)
+
 # Install the scope ini file
 install(
-  FILES "com.ubuntu.scopes.soundcloud_soundcloud.ini"
+  FILES "${CMAKE_CURRENT_BINARY_DIR}/${SCOPE_NAME}.ini"
   DESTINATION ${SCOPE_INSTALL_DIR}
 )
 
@@ -18,4 +25,3 @@ install(
   DESTINATION
     "${SCOPE_INSTALL_DIR}"
 )
-

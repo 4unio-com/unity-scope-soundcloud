@@ -1,10 +1,11 @@
 
 # Put the ini file in the build directory next to the scope
 # .so file so test tools can find both easily.
-configure_file(
-  "${CMAKE_SOURCE_DIR}/data/com.ubuntu.scopes.soundcloud_soundcloud.ini"
-  "${CMAKE_CURRENT_BINARY_DIR}/com.ubuntu.scopes.soundcloud_soundcloud.ini"
-  @ONLY
+intltool_merge_translations(
+  "${CMAKE_SOURCE_DIR}/data/${SCOPE_NAME}.ini.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/${SCOPE_NAME}.ini"
+  ALL
+  UTF8
 )
 
 function(configure_icons)

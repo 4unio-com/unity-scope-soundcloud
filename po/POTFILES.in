@@ -1,0 +1,16 @@
+[type: gettext/ini] data/com.ubuntu.scopes.soundcloud_soundcloud.ini.in
+include/api/resource.h
+include/api/user.h
+include/api/config.h
+include/api/track.h
+include/api/client.h
+include/scope/preview.h
+include/scope/localization.h
+include/scope/query.h
+include/scope/scope.h
+src/api/client.cpp
+src/api/track.cpp
+src/api/user.cpp
+src/scope/query.cpp
+src/scope/scope.cpp
+src/scope/preview.cpp
