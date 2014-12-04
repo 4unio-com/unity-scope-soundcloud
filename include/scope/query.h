@@ -36,8 +36,8 @@ namespace scope {
 class Query: public unity::scopes::SearchQueryBase {
 public:
     Query(const unity::scopes::CannedQuery &query,
-            const unity::scopes::SearchMetadata &metadata,
-            api::Config::Ptr config);
+          const unity::scopes::SearchMetadata &metadata,
+          std::shared_ptr<unity::scopes::OnlineAccountClient> oa_client);
 
     ~Query() = default;
 
