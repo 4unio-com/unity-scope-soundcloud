@@ -55,7 +55,7 @@ set(UBUNTU_MANIFEST_PATH "click/manifest.json.in" CACHE INTERNAL "Tells QtCreato
 set(UBUNTU_PROJECT_TYPE "Scope" CACHE INTERNAL "Tells QtCreator this is a Scope project")
 
 # Important project paths
-set(SCOPE_VERSION "1.0.0-${BZR_REVNO}")
+set(SCOPE_VERSION "1.0.1-${BZR_REVNO}")
 set(CMAKE_INSTALL_PREFIX /)
 set(SCOPE_INSTALL_DIR "/soundcloud")
 set(GETTEXT_PACKAGE "unity-scope-soundcloud")
