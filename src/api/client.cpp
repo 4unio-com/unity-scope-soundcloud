@@ -189,6 +189,8 @@ public:
     }
 
     void update_config() {
+        config_ = Config();
+
         if (getenv("NETWORK_SCOPE_APIROOT")) {
             config_.apiroot = getenv("NETWORK_SCOPE_APIROOT");
         }
@@ -218,8 +220,6 @@ public:
         }
 
         if (!config_.authenticated) {
-            config_.access_token = "";
-            config_.client_id = "";
             std::cerr << "SoundCloud scope is unauthenticated" << std::endl;
         } else {
             std::cerr << "SoundCloud scope is authenticated" << std::endl;
