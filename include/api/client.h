@@ -22,6 +22,8 @@
 #include <api/config.h>
 #include <api/track.h>
 
+#include <unity/scopes/OnlineAccountClient.h>
+
 #include <atomic>
 #include <deque>
 #include <future>
@@ -50,7 +52,7 @@ enum class SP {
  */
 class Client {
 public:
-    Client(Config::Ptr config);
+    Client(std::shared_ptr<unity::scopes::OnlineAccountClient> oa_client);
 
     virtual ~Client() = default;
 
@@ -65,7 +67,7 @@ public:
      */
     virtual void cancel();
 
-    virtual Config::Ptr config();
+    virtual bool authenticated();
 
 protected:
     class Priv;
