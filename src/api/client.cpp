@@ -189,11 +189,11 @@ public:
     }
 
     void update_config() {
-        if (getenv("YOUTUBE_SCOPE_APIROOT")) {
-            config_.apiroot = getenv("YOUTUBE_SCOPE_APIROOT");
+        if (getenv("NETWORK_SCOPE_APIROOT")) {
+            config_.apiroot = getenv("NETWORK_SCOPE_APIROOT");
         }
 
-        if (getenv("YOUTUBE_SCOPE_IGNORE_ACCOUNTS") != nullptr) {
+        if (getenv("SOUNDCLOUD_SCOPE_IGNORE_ACCOUNTS") != nullptr) {
             return;
         }
 
@@ -220,9 +220,9 @@ public:
         if (!config_.authenticated) {
             config_.access_token = "";
             config_.client_id = "";
-            std::cerr << "YouTube scope is unauthenticated" << std::endl;
+            std::cerr << "SoundCloud scope is unauthenticated" << std::endl;
         } else {
-            std::cerr << "YouTube scope is authenticated" << std::endl;
+            std::cerr << "SoundCloud scope is authenticated" << std::endl;
         }
     }
 };
