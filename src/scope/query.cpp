@@ -272,7 +272,7 @@ bool Query::push_track(const sc::SearchReplyProxy &reply,
 
     res["label"] = track.label_name();
     res["streamable"] = track.streamable();
-    res["stream-url"] = track.stream_url() + "?client_id=" + client_.config()->client_id;
+    res["stream-url"] = track.stream_url() + "?client_id=" + client_.client_id();
     res["purchase-url"] = track.purchase_url();
     res["video-url"] = track.video_url();
     res["waveform"] = track.waveform();

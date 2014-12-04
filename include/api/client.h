@@ -67,6 +67,8 @@ public:
      */
     virtual void cancel();
 
+    virtual std::string client_id();
+
     virtual bool authenticated();
 
 protected:

@@ -176,6 +176,12 @@ public:
         return prom->get_future();
     }
 
+    std::string client_id() {
+        std::lock_guard<std::mutex> lock(config_mutex_);
+        update_config();
+        return config_.client_id;
+    }
+
     bool authenticated() {
         std::lock_guard<std::mutex> lock(config_mutex_);
         update_config();
@@ -196,9 +202,8 @@ public:
         /// For now we have to re-instantiate a new OnlineAccountClient each time.
 
         ///if (oa_client_ == nullptr) {
-            oa_client_.reset(
-                    new unity::scopes::OnlineAccountClient(SCOPE_INSTALL_NAME,
-                            "sharing", "google"));
+            oa_client_.reset(new unity::scopes::OnlineAccountClient(
+                SCOPE_NAME, "sharing", SCOPE_ACCOUNTS_NAME));
         ///} else {
         ///    oa_client_->refresh_service_statuses();
         ///}
@@ -208,7 +213,6 @@ public:
                 config_.authenticated = true;
                 config_.access_token = status.access_token;
                 config_.client_id = status.client_id;
-                config_.client_secret = status.client_secret;
                 break;
             }
         }
@@ -216,7 +220,6 @@ public:
         if (!config_.authenticated) {
             config_.access_token = "";
             config_.client_id = "";
-            config_.client_secret = "";
             std::cerr << "YouTube scope is unauthenticated" << std::endl;
         } else {
             std::cerr << "YouTube scope is authenticated" << std::endl;
@@ -276,6 +279,10 @@ future<deque<Track>> Client::stream_tracks(int limit) {
 
 void Client::cancel() {
     p->cancelled_ = true;
+}
+
+std::string Client::client_id() {
+    return p->client_id();
 }
 
 bool Client::authenticated() {

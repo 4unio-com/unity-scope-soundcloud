@@ -21,45 +21,10 @@
 #include <scope/query.h>
 #include <scope/scope.h>
 
-#include <iostream>
-#include <sstream>
-#include <fstream>
-
 namespace sc = unity::scopes;
 using namespace std;
 using namespace api;
 using namespace scope;
-
-void Scope::init_config() {
-    config_ = make_shared<Config>();
-    config_->directory = scope_directory();
-    // Under test we set a different API root
-    char *apiroot = getenv("NETWORK_SCOPE_APIROOT");
-    if (apiroot) {
-        config_->apiroot = apiroot;
-    }
-}
-
-void Scope::update_config() {
-    std::lock_guard<std::mutex> lock(config_mutex_);
-    init_config();
-
-    for (auto const& status : oa_client_->get_service_statuses()) {
-        if (status.service_authenticated) {
-            config_->authenticated = true;
-            config_->access_token = status.access_token;
-            config_->client_id = status.client_id;
-            break;
-        }
-    }
-
-    if (config_->authenticated) {
-        cerr << "SoundCloud scope is authenticated" << endl;
-    } else {
-        cerr << "SoundCloud scope is unauthenticated" << endl;
-    }
-    config_cond_.notify_all();
-}
 
 void Scope::start(string const&) {
     setlocale(LC_ALL, "");
@@ -70,24 +35,6 @@ void Scope::start(string const&) {
     if (getenv("SOUNDCLOUD_SCOPE_IGNORE_ACCOUNTS") == nullptr) {
         oa_client_.reset(new sc::OnlineAccountClient(
             SCOPE_NAME, "sharing", SCOPE_ACCOUNTS_NAME));
-        oa_client_->set_service_update_callback(
-            [this](sc::OnlineAccountClient::ServiceStatus const &) {
-                this->update_config();
-            });
-
-        ///! TODO: We should only be waiting here if we know that
-        ///        there is at least one SoundCloud account enabled.
-        ///        OnlineAccountClient needs to expose some
-        ///        functionality for us to determine that.
-
-        // Allow 1 second for the callback to initialize config_
-        std::unique_lock<std::mutex> lock(config_mutex_);
-        config_cond_.wait_for(lock, std::chrono::seconds(1), [this] { return config_ != nullptr; });
-    }
-
-    if (config_ == nullptr) {
-        init_config();
-        cerr << "SoundCloud scope is unauthenticated" << endl;
     }
 }
 
@@ -96,12 +43,7 @@ void Scope::stop() {
 
 sc::SearchQueryBase::UPtr Scope::search(const sc::CannedQuery &query,
                                         const sc::SearchMetadata &metadata) {
-    shared_ptr<Config> config;
-    {
-        std::lock_guard<std::mutex> lock(config_mutex_);
-        config = config_;
-    }
-    return sc::SearchQueryBase::UPtr(new Query(query, metadata, config));
+    return sc::SearchQueryBase::UPtr(new Query(query, metadata, oa_client_));
 }
 
 sc::PreviewQueryBase::UPtr Scope::preview(sc::Result const& result,
