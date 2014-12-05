@@ -74,9 +74,9 @@ static deque<T> get_typed_activity_list(const string &filter, const json::Value 
 
 class Client::Priv {
 public:
-    Priv(Config::Ptr config) :
-            client_(http::make_client()), worker_ { [this]() {client_->run();} }, config_(
-                    config), cancelled_(false) {
+    Priv(std::shared_ptr<unity::scopes::OnlineAccountClient> oa_client) :
+            client_(http::make_client()), worker_ { [this]() {client_->run();} },
+            oa_client_(oa_client), cancelled_(false) {
     }
 
     ~Priv() {
@@ -90,27 +90,32 @@ public:
 
     std::thread worker_;
 
-    Config::Ptr config_;
+    Config config_;
+    std::mutex config_mutex_;
+
+    std::shared_ptr<unity::scopes::OnlineAccountClient> oa_client_;
 
     std::atomic<bool> cancelled_;
 
     void get(const net::Uri::Path &path,
             const net::Uri::QueryParameters &parameters,
             http::Request::Handler &handler) {
+        std::lock_guard<std::mutex> lock(config_mutex_);
+        update_config();
 
         http::Request::Configuration configuration;
         net::Uri::QueryParameters complete_parameters(parameters);
-        if (config_->authenticated) {
+        if (config_.authenticated) {
             complete_parameters.emplace_back(
-                "oauth_token", config_->access_token);
+                "oauth_token", config_.access_token);
         } else {
-            complete_parameters.emplace_back("client_id", config_->client_id);
+            complete_parameters.emplace_back("client_id", config_.client_id);
         }
 
-        net::Uri uri = net::make_uri(config_->apiroot, path,
+        net::Uri uri = net::make_uri(config_.apiroot, path,
                 complete_parameters);
         configuration.uri = client_->uri_to_string(uri);
-        configuration.header.add("User-Agent", config_->user_agent + " (gzip)");
+        configuration.header.add("User-Agent", config_.user_agent + " (gzip)");
         configuration.header.add("Accept-Encoding", "gzip");
 
         auto request = client_->head(configuration);
@@ -170,10 +175,60 @@ public:
 
         return prom->get_future();
     }
+
+    std::string client_id() {
+        std::lock_guard<std::mutex> lock(config_mutex_);
+        update_config();
+        return config_.client_id;
+    }
+
+    bool authenticated() {
+        std::lock_guard<std::mutex> lock(config_mutex_);
+        update_config();
+        return config_.authenticated;
+    }
+
+    void update_config() {
+        config_ = Config();
+
+        if (getenv("NETWORK_SCOPE_APIROOT")) {
+            config_.apiroot = getenv("NETWORK_SCOPE_APIROOT");
+        }
+
+        if (getenv("SOUNDCLOUD_SCOPE_IGNORE_ACCOUNTS") != nullptr) {
+            return;
+        }
+
+        /// TODO: The code commented out below should be uncommented as soon as
+        /// OnlineAccountClient::refresh_service_statuses() is fixed (Bug #1398813).
+        /// For now we have to re-instantiate a new OnlineAccountClient each time.
+
+        ///if (oa_client_ == nullptr) {
+            oa_client_.reset(new unity::scopes::OnlineAccountClient(
+                SCOPE_NAME, "sharing", SCOPE_ACCOUNTS_NAME));
+        ///} else {
+        ///    oa_client_->refresh_service_statuses();
+        ///}
+
+        for (auto const& status : oa_client_->get_service_statuses()) {
+            if (status.service_authenticated) {
+                config_.authenticated = true;
+                config_.access_token = status.access_token;
+                config_.client_id = status.client_id;
+                break;
+            }
+        }
+
+        if (!config_.authenticated) {
+            std::cerr << "SoundCloud scope is unauthenticated" << std::endl;
+        } else {
+            std::cerr << "SoundCloud scope is authenticated" << std::endl;
+        }
+    }
 };
 
-Client::Client(Config::Ptr config) :
-        p(new Priv(config)) {
+Client::Client(std::shared_ptr<unity::scopes::OnlineAccountClient> oa_client) :
+        p(new Priv(oa_client)) {
 }
 
 future<deque<Track>> Client::search_tracks(const std::deque<std::pair<SP, std::string>> &parameters) {
@@ -226,7 +281,11 @@ void Client::cancel() {
     p->cancelled_ = true;
 }
 
-Config::Ptr Client::config() {
-    return p->config_;
+std::string Client::client_id() {
+    return p->client_id();
+}
+
+bool Client::authenticated() {
+    return p->authenticated();
 }
 

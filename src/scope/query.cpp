@@ -182,8 +182,9 @@ static string format_time(unsigned int t) {
 }
 
 Query::Query(const sc::CannedQuery &query, const sc::SearchMetadata &metadata,
-        Config::Ptr config) :
-        sc::SearchQueryBase(query, metadata), client_(config) {
+             std::shared_ptr<sc::OnlineAccountClient> oa_client) :
+        sc::SearchQueryBase(query, metadata),
+        client_(oa_client) {
 }
 
 void Query::cancelled() {
@@ -203,7 +204,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         future<deque<Track>> stream_future;
         bool reading_stream = false;
         if (query_string.empty() && query.department_id().empty()) {
-            if (client_.config()->authenticated) {
+            if (client_.authenticated()) {
                 first_cat = reply->register_category(
                     "stream", _("Stream"), "",
                     sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
@@ -271,7 +272,7 @@ bool Query::push_track(const sc::SearchReplyProxy &reply,
 
     res["label"] = track.label_name();
     res["streamable"] = track.streamable();
-    res["stream-url"] = track.stream_url() + "?client_id=" + client_.config()->client_id;
+    res["stream-url"] = track.stream_url() + "?client_id=" + client_.client_id();
     res["purchase-url"] = track.purchase_url();
     res["video-url"] = track.video_url();
     res["waveform"] = track.waveform();
