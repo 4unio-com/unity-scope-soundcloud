@@ -21,6 +21,7 @@
           <setting type="as" name="Scope">['non-expiring']</setting>
           <setting name="ClientId">eadbbc8380aa72be1412e2abe5f8e4ca</setting>
           <setting type="as" name="AllowedSchemes">['https','http']</setting>
+          <setting name="DisableStateParameter" type="b">true</settings>
         </group>
       </group>
     </group>
