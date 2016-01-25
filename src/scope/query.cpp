@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Pete Woods <pete.woods@canonical.com>
+ *         Gary Wang  <gary.wang@canonical.com>
  */
 
 #include <boost/algorithm/string/trim.hpp>
@@ -74,16 +75,12 @@ const static string SEARCH_CATEGORY_LOGIN_NAG = R"(
 {
   "schema-version": 1,
   "template": {
-    "category-layout": "grid",
+    "category-layout": "vertical-journal",
     "card-size": "large",
-    "card-background": "color:///#ff4200"
+    "card-background": "color:///#ff5500"
   },
   "components": {
-    "title": "title",
-    "background": "background",
-    "art" : {
-      "aspect-ratio": 100.0
-    }
+    "title": "title"
   }
 }
 )";
@@ -269,7 +266,8 @@ bool Query::push_track(const sc::SearchReplyProxy &reply,
     } else {
         res.set_art(track.user().artwork());
     }
-
+     
+    res["id"] = std::to_string(track.id()); 
     res["label"] = track.label_name();
     res["streamable"] = track.streamable();
     res["stream-url"] = track.stream_url() + "?client_id=" + client_.client_id();
@@ -277,19 +275,33 @@ bool Query::push_track(const sc::SearchReplyProxy &reply,
     res["video-url"] = track.video_url();
     res["waveform"] = track.waveform();
     res["username"] = track.user().title();
+    res["userid"] = std::to_string(track.user().id());
     res["description"] = track.description();
 
     string duration = format_time(track.duration());
     string playback_count = u8"\u25B6 " + format_fixed(track.playback_count());
-    string favoritings_count = u8"\u2665 " + format_fixed(track.favoritings_count());
+    string favoritings_count = u8"\u263B " + format_fixed(track.favoritings_count());
+    string likes_count = u8"\u2665 " + format_fixed(track.likes_count());
+    string repost_count = u8"\u2B94 " + format_fixed(track.repost_count());
+    string comment_count = u8"\u270E " + format_fixed(track.comment_count());
     res["duration"] = (int) (track.duration() / 1000);
     res["playback-count"] = playback_count;
     res["favoritings-count"] = favoritings_count;
+    res["likes-count"] = likes_count;
+    res["repost-count"] = repost_count;
+    res["comment-count"] = comment_count;
+
+    sc::VariantArray trackinfo {
+        sc::Variant(sc::VariantArray{sc::Variant(_("create time")), sc::Variant(track.created_at())}),
+        sc::Variant(sc::VariantArray{sc::Variant(_("genre")), sc::Variant(track.genre())}),
+        sc::Variant(sc::VariantArray{sc::Variant(_("license")), sc::Variant(track.license())})
+    };
+    res["trackinfo"] = sc::Variant(trackinfo);
 
     sc::VariantBuilder builder;
     builder.add_tuple({{"value", sc::Variant(duration)}});
     builder.add_tuple({{"value", sc::Variant(playback_count)}});
-    builder.add_tuple({{"value", sc::Variant(favoritings_count)}});
+    builder.add_tuple({{"value", sc::Variant(likes_count)}});
     res["attributes"] = builder.end();
 
     return reply->push(res);

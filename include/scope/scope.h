@@ -61,6 +61,15 @@ public:
             unity::scopes::CannedQuery const& q,
             unity::scopes::SearchMetadata const&) override;
 
+    /**
+     * Called each time a new action is requested
+     */
+    unity::scopes::ActivationQueryBase::UPtr perform_action(
+            const unity::scopes::Result &result,
+            const unity::scopes::ActionMetadata &metadata,
+            std::string const& widget_id,
+            std::string const& action_id) override;
+
 protected:
     std::shared_ptr<unity::scopes::OnlineAccountClient> oa_client_;
 };

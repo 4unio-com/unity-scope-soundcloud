@@ -14,13 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Pete Woods <pete.woods@canonical.com>
+ *         Gary Wang  <gary.wang@canonical.com>
  */
 
 #include <api/client.h>
 #include <api/track.h>
+#include <api/comment.h>
 
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/algorithm/string.hpp>
 #include <core/net/error.h>
 #include <core/net/http/client.h>
 #include <core/net/http/content_type.h>
@@ -70,6 +73,29 @@ static deque<T> get_typed_activity_list(const string &filter, const json::Value 
     return results;
 }
 
+template<typename T>
+static deque<T> get_typed_comment_list(const string &filter, const json::Value &root) {
+    deque<T> results;
+    for (json::ArrayIndex index = 0; index < root.size(); ++index) {
+        json::Value item = root[index];
+
+        string kind = item["kind"].asString();
+
+        if (kind == filter) {
+            results.emplace_back(T(item));
+        }
+    }
+    return results;
+}
+
+template<typename T>
+static T is_successful(const json::Value &root) {
+    T results = (boost::algorithm::contains(root["status"].asString(), "201")
+                  || boost::algorithm::contains(root["status"].asString(), "200")
+                  || root["id"].asUInt() > 0);
+    return results;
+}
+
 }
 
 class Client::Priv {
@@ -101,6 +127,55 @@ public:
             const net::Uri::QueryParameters &parameters,
             http::Request::Handler &handler) {
         std::lock_guard<std::mutex> lock(config_mutex_);
+        http::Request::Configuration configuration = net_config(path, parameters);
+        configuration.header.add("User-Agent", config_.user_agent + " (gzip)");
+        configuration.header.add("Accept-Encoding", "gzip");
+
+        auto request = client_->head(configuration);
+        request->async_execute(handler);
+    }
+
+    void post(const net::Uri::Path &path,
+            const net::Uri::QueryParameters &parameters,
+            const std::string &postmsg,
+            const std::string &content_type,
+            http::Request::Handler &handler) {
+        std::lock_guard<std::mutex> lock(config_mutex_);
+        http::Request::Configuration configuration = net_config(path, parameters);
+        configuration.header.add("User-Agent", config_.user_agent);
+        configuration.header.add("Content-Type", content_type);
+      
+        auto request = client_->post(configuration, postmsg, content_type);
+        request->async_execute(handler);
+    }
+    
+    void put(const net::Uri::Path &path,
+            const net::Uri::QueryParameters &parameters,
+            const std::string &postmsg,
+            http::Request::Handler &handler) {
+        std::lock_guard<std::mutex> lock(config_mutex_);
+        http::Request::Configuration configuration = net_config(path, parameters);
+        configuration.header.add("User-Agent", config_.user_agent);
+        std::istringstream is(postmsg);
+
+        auto request = client_->put(configuration, is, postmsg.length());
+        request->async_execute(handler);
+    }
+
+    void del(const net::Uri::Path &path,
+            const net::Uri::QueryParameters &parameters,
+            http::Request::Handler &handler) {
+        std::lock_guard<std::mutex> lock(config_mutex_);
+        http::Request::Configuration configuration = net_config(path, parameters);
+        configuration.header.add("User-Agent", config_.user_agent);
+        configuration.header.add("X-HTTP-Method-Override", "DELETE");
+
+        auto request = client_->post(configuration, "", "");
+        request->async_execute(handler);
+    }
+
+    http::Request::Configuration net_config(const net::Uri::Path &path,
+                                            const net::Uri::QueryParameters &parameters) {
         update_config();
 
         http::Request::Configuration configuration;
@@ -115,12 +190,9 @@ public:
         net::Uri uri = net::make_uri(config_.apiroot, path,
                 complete_parameters);
         configuration.uri = client_->uri_to_string(uri);
-        configuration.header.add("User-Agent", config_.user_agent + " (gzip)");
-        configuration.header.add("Accept-Encoding", "gzip");
 
-        auto request = client_->head(configuration);
-        request->async_execute(handler);
-    }
+		return configuration;
+	}
 
     http::Request::Progress::Next progress_report(
             const http::Request::Progress&) {
@@ -164,14 +236,118 @@ public:
                     json::Reader reader;
                     reader.parse(decompressed, root);
 
-                    if (response.status != http::Status::ok) {
+                    //Soundcloud api return 404 if track is not in auth user's favorite list
+                    //or auth user is not following one certain user.
+//                    if (response.status != http::Status::ok) {
+//                        prom->set_exception(make_exception_ptr(domain_error(root["error"].asString())));
+//                    } else {
+                        prom->set_value(func(root));
+//                    }
+                });
+
+        get(path, parameters, handler);
+
+        return prom->get_future();
+    }
+
+    template<typename T>
+    future<T> async_post(const net::Uri::Path &path,
+            const net::Uri::QueryParameters &parameters,
+            const std::string &postmsg,
+            const std::string &content_type,
+            const function<T(const json::Value &root)> &func) {
+        auto prom = make_shared<promise<T>>();
+
+        http::Request::Handler handler;
+        handler.on_progress(
+                bind(&Client::Priv::progress_report, this, placeholders::_1));
+        handler.on_error([prom](const net::Error& e)
+        {
+            prom->set_exception(make_exception_ptr(e));
+        });
+        handler.on_response(
+                [prom,func](const http::Response& response)
+                {
+                    json::Value root;
+                    json::Reader reader;
+                    reader.parse(response.body, root);
+
+                    if (response.status != http::Status::ok && 
+						response.status != http::Status::created) {
                         prom->set_exception(make_exception_ptr(domain_error(root["error"].asString())));
                     } else {
                         prom->set_value(func(root));
                     }
                 });
 
-        get(path, parameters, handler);
+        post(path, parameters, postmsg, content_type, handler);
+
+        return prom->get_future();
+    }
+    
+    template<typename T>
+    future<T> async_put(const net::Uri::Path &path,
+            const net::Uri::QueryParameters &parameters,
+            const std::string &msg,
+            const function<T(const json::Value &root)> &func) {
+        auto prom = make_shared<promise<T>>();
+
+        http::Request::Handler handler;
+        handler.on_progress(
+                bind(&Client::Priv::progress_report, this, placeholders::_1));
+        handler.on_error([prom](const net::Error& e)
+        {
+            prom->set_exception(make_exception_ptr(e));
+        });
+        handler.on_response(
+                [prom,func](const http::Response& response)
+                {		  
+                    json::Value root;
+                    json::Reader reader;
+                    reader.parse(response.body, root);
+
+                    if (response.status != http::Status::created &&
+                        response.status != http::Status::ok) {
+                        prom->set_exception(make_exception_ptr(domain_error(root["error"].asString())));
+                    } else {
+                        prom->set_value(func(root));
+                    }
+                });
+
+        put(path, parameters, msg, handler);
+
+        return prom->get_future();
+    }
+
+    template<typename T>
+    future<T> async_del(const net::Uri::Path &path,
+            const net::Uri::QueryParameters &parameters,
+            const function<T(const json::Value &root)> &func) {
+        auto prom = make_shared<promise<T>>();
+
+        http::Request::Handler handler;
+        handler.on_progress(
+                bind(&Client::Priv::progress_report, this, placeholders::_1));
+        handler.on_error([prom](const net::Error& e)
+        {
+            prom->set_exception(make_exception_ptr(e));
+        });
+        handler.on_response(
+                [prom,func](const http::Response& response)
+                {
+                    json::Value root;
+                    json::Reader reader;
+                    reader.parse(response.body, root);
+
+                    if (response.status != http::Status::created &&
+                            response.status != http::Status::ok) {
+                        prom->set_exception(make_exception_ptr(domain_error(root["error"].asString())));
+                    } else {
+                        prom->set_value(func(root));
+                    }
+                });
+
+        del(path, parameters, handler);
 
         return prom->get_future();
     }
@@ -275,6 +451,98 @@ future<deque<Track>> Client::stream_tracks(int limit) {
         [](const json::Value &root) {
             return get_typed_activity_list<Track>("track", root);
         });
+}
+
+future<deque<Comment>> Client::track_comments(const std::string &trackid) {
+    net::Uri::QueryParameters params;
+
+    return p->async_get<deque<Comment>>( 
+        { "tracks", trackid, "comments.json"}, params,
+        [](const json::Value &root) {
+            auto results = get_typed_comment_list<Comment>("comment", root);
+            return results;
+        });
+}
+
+future<bool> Client::post_comment(const std::string &trackid,
+                                  const std::string &postmsg) {
+    net::Uri::QueryParameters params;
+
+    string postbody = "<comment><body>"+ postmsg + "</body></comment>";
+    std::string content_type = "application/xml";
+    return p->async_post<bool>(
+        { "tracks", trackid, "comments.json"}, params, postbody, content_type,
+        [](const json::Value &root) {
+            auto results = is_successful<bool>(root);
+            return results;
+        });
+}
+
+future<bool> Client::is_fav_track(const std::string &trackid) {
+    net::Uri::QueryParameters params;
+
+    return p->async_get<bool>(
+        { "me", "favorites", trackid}, params,
+        [](const json::Value &root) {
+            auto results = is_successful<bool>(root);
+            return results;
+        });
+}
+
+future<bool> Client::like_track(const std::string &trackid) {
+    net::Uri::QueryParameters params;
+
+    return p->async_put<bool>(
+        { "me", "favorites", trackid}, params, "",
+        [](const json::Value &root) {
+            auto results = is_successful<bool>(root);
+            return results;
+    });
+}
+
+future<bool> Client::delete_like_track(const std::string &trackid) {
+    net::Uri::QueryParameters params;
+
+    return p->async_del<bool>(
+        { "me", "favorites", trackid}, params,
+        [](const json::Value &root) {
+            auto results = is_successful<bool>(root);
+            return results;
+    });
+}
+
+std::future<bool> Client::is_user_follower(const string &userid) {
+    net::Uri::QueryParameters params;
+
+    return p->async_get<bool>(
+        { "me", "followings", userid}, params,
+        [](const json::Value &root) {
+            auto results = is_successful<bool>(root);
+            return results;
+    });
+}
+
+future<bool> Client::follow_user(const std::string &userid) {
+    net::Uri::QueryParameters params;
+
+    return p->async_put<bool>(
+        { "me", "followings", userid}, params, "",
+        [](const json::Value &root) {
+            auto results = is_successful<bool>(root);
+            return results;
+    });
+}
+
+std::future<bool> Client::unfollow_user(const string &userid)
+{
+    net::Uri::QueryParameters params;
+
+    return p->async_del<bool>(
+        { "me", "followings", userid}, params,
+        [](const json::Value &root) {
+            auto results = is_successful<bool>(root);
+            return results;
+    });
 }
 
 void Client::cancel() {

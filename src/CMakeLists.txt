@@ -32,9 +32,11 @@ set(SCOPE_SOURCES
   api/client.cpp
   api/track.cpp
   api/user.cpp
+  api/comment.cpp
   scope/preview.cpp
   scope/query.cpp
   scope/scope.cpp
+  scope/activation.cpp
 )
 
 # Find all the headers

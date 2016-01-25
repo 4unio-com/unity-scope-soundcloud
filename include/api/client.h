@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Pete Woods <pete.woods@canonical.com>
+ *         Gary Wang  <gary.wang@canonical.com>
  */
 
 #ifndef API_CLIENT_H_
@@ -21,6 +22,7 @@
 
 #include <api/config.h>
 #include <api/track.h>
+#include <api/comment.h>
 
 #include <unity/scopes/OnlineAccountClient.h>
 
@@ -62,6 +64,22 @@ public:
 
     virtual std::future<std::deque<Track>> stream_tracks(int limit=0);
 
+    virtual std::future<std::deque<Comment>> track_comments(const std::string &trackid);
+
+    virtual std::future<bool> post_comment(const std::string &trackid,
+                                           const std::string &postmsg);
+    
+    virtual std::future<bool> is_fav_track(const std::string &trackid);
+
+    virtual std::future<bool> like_track(const std::string &trackid);
+
+    virtual std::future<bool> delete_like_track(const std::string &trackid);
+
+    virtual std::future<bool> is_user_follower(const std::string &userid);
+
+    virtual std::future<bool> follow_user(const std::string &userid);
+
+    virtual std::future<bool> unfollow_user(const std::string &userid);
     /**
      * Cancel any pending queries (this method can be called from a different thread)
      */

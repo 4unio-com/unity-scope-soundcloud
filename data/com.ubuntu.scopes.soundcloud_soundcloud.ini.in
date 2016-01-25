@@ -13,3 +13,5 @@ PageHeader.DividerColor = #ff2a2a2a
 PageHeader.ForegroundColor = #ffffffff
 PageHeader.Logo = logo.png
 PageHeader.NavigationBackground = color:///#ddffffff
+PreviewButtonColor=#FF5500
+

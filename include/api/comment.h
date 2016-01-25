@@ -17,37 +17,54 @@
  *         Gary Wang  <gary.wang@canonical.com>
  */
 
-#ifndef API_RESOURCE_H_
-#define API_RESOURCE_H_
+#ifndef API_COMMENT_H_
+#define API_COMMENT_H_
+
+#include <api/user.h>
 
 #include <memory>
 #include <string>
 
+namespace Json {
+class Value;
+}
+
 namespace api {
 
-class Resource {
+class Comment: public Resource {
 public:
-    enum class Kind {
-        track, user, comment,
-    };
+    typedef std::shared_ptr<Comment> Ptr;
 
-    typedef std::shared_ptr<Resource> Ptr;
+    Comment(const Json::Value &data);
 
-    Resource() = default;
+    virtual ~Comment() = default;
 
-    virtual ~Resource() = default;
+    const unsigned int & id() const override;
 
-    virtual const std::string & title() const = 0;
+    const std::string & title() const override;
 
-    virtual const std::string & artwork() const = 0;
+    const std::string & artwork() const override;
 
-    virtual const unsigned int & id() const = 0;
+    const std::string & body() const;
 
-    virtual Kind kind() const = 0;
+    const std::string & created_at() const;
+    
+    const User & user() const;
 
-    virtual std::string kind_str() const = 0;
+    Kind kind() const override;
+
+    std::string kind_str() const override;
+
+protected:
+    std::string body_;
+
+    std::string created_at_;
+    
+    unsigned int id_;
+    
+    User user_;
 };
 
 }
 
-#endif // API_RESOURCE_H_
+#endif // API_COMMENT_H_

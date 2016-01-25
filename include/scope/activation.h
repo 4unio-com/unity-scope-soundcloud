@@ -17,13 +17,12 @@
  *         Gary Wang  <gary.wang@canonical.com>
  */
 
-#ifndef SCOPE_PREVIEW_H_
-#define SCOPE_PREVIEW_H_
+#ifndef SCOPE_ACTIVATIOIN_H_
+#define SCOPE_ACTIVATIOIN_H_
 
 #include <api/client.h>
 
-#include <unity/scopes/PreviewQueryBase.h>
-#include <unity/scopes/OnlineAccountClient.h>
+#include <unity/scopes/ActivationQueryBase.h>
 
 namespace unity {
 namespace scopes {
@@ -34,31 +33,32 @@ class Result;
 namespace scope {
 
 /**
- * Represents an individual preview request.
+ * Represents an individual action request.
  *
- * Each time a result is previewed in the UI a new Preview
+ * Each time a action is performed in the UI a new Action
  * object is created.
  */
-class Preview: public unity::scopes::PreviewQueryBase {
+class Activation : public unity::scopes::ActivationQueryBase
+{
 public:
-    Preview(const unity::scopes::Result &result,
-            const unity::scopes::ActionMetadata &metadata,
-            std::shared_ptr<unity::scopes::OnlineAccountClient> oa_client);
+    Activation(const unity::scopes::Result &result,
+           const unity::scopes::ActionMetadata & metadata,
+           std::string const& action_id,
+           std::shared_ptr<unity::scopes::OnlineAccountClient> oa_client);
 
-    ~Preview() = default;
+    ~Activation() = default;
 
-    void cancelled() override;
-
-    /**
-     * Populates the reply object with preview information.
+     /**
+     * Trigger the action object with action id.
      */
-    void run(unity::scopes::PreviewReplyProxy const& reply) override;
-    
+     virtual unity::scopes::ActivationResponse activate() override;
+
 private:
+    std::string const action_id_;
+    
     api::Client client_;
 };
 
 }
 
-#endif // SCOPE_PREVIEW_H_
-
+#endif // SCOPE_ACTIVATION_H_
