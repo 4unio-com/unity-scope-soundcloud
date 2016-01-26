@@ -44,6 +44,16 @@ public:
 
     const unsigned int & id() const override;
 
+    const std::string & permalink_url() const;
+
+    const unsigned int & track_count() const;
+
+    const unsigned int & followers_count() const;
+
+    const unsigned int & followings_count() const;
+
+    const std::string & bio() const;
+
     Kind kind() const override;
 
     std::string kind_str() const override;
@@ -54,6 +64,16 @@ protected:
     unsigned int id_;
 
     std::string artwork_;
+
+    std::string permalink_;
+
+    unsigned int track_count_;
+
+    unsigned int followers_count_;
+
+    unsigned int followings_count_;
+
+    std::string bio_;
 };
 
 }

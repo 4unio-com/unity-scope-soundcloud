@@ -74,16 +74,13 @@ static deque<T> get_typed_activity_list(const string &filter, const json::Value 
 }
 
 template<typename T>
-static deque<T> get_typed_comment_list(const string &filter, const json::Value &root) {
-    deque<T> results;
-    for (json::ArrayIndex index = 0; index < root.size(); ++index) {
-        json::Value item = root[index];
+static T get_typed_authuser_info(const string &filter, const json::Value &root) {
+    T results((json::Value()));
 
-        string kind = item["kind"].asString();
+    string kind = root["kind"].asString();
 
-        if (kind == filter) {
-            results.emplace_back(T(item));
-        }
+    if (kind == filter) {
+        return T(root);
     }
     return results;
 }
@@ -459,7 +456,7 @@ future<deque<Comment>> Client::track_comments(const std::string &trackid) {
     return p->async_get<deque<Comment>>( 
         { "tracks", trackid, "comments.json"}, params,
         [](const json::Value &root) {
-            auto results = get_typed_comment_list<Comment>("comment", root);
+            auto results = get_typed_list<Comment>("comment", root);
             return results;
         });
 }
@@ -475,6 +472,31 @@ future<bool> Client::post_comment(const std::string &trackid,
         [](const json::Value &root) {
             auto results = is_successful<bool>(root);
             return results;
+    });
+}
+
+std::future<std::deque<Track> > Client::favorite_tracks()
+{
+    net::Uri::QueryParameters params;
+
+    return p->async_get<deque<Track>>(
+        { "me", "favorites.json"}, params,
+        [](const json::Value &root) {
+            return get_typed_list<Track>("track", root);
+    });
+}
+
+std::future<std::deque<Track> > Client::get_user_tracks(const string &userid,
+                                                        int limit)
+{
+    net::Uri::QueryParameters params;
+    if (limit > 0) {
+        params.emplace_back("limit", std::to_string(limit));
+    }
+    return p->async_get<deque<Track>>(
+        { "users", userid, "tracks.json"}, params,
+        [](const json::Value &root) {
+            return get_typed_list<Track>("track", root);
         });
 }
 
@@ -541,6 +563,30 @@ std::future<bool> Client::unfollow_user(const string &userid)
         { "me", "followings", userid}, params,
         [](const json::Value &root) {
             auto results = is_successful<bool>(root);
+            return results;
+    });
+}
+
+std::future<User> Client::get_authuser_info()
+{
+    net::Uri::QueryParameters params;
+
+    return p->async_get<User>(
+        { "me" }, params,
+        [](const json::Value &root) {
+            auto results = get_typed_authuser_info<User>("user", root);
+            return results;
+    });
+}
+
+std::future<User> Client::get_user_info(const string &userid)
+{
+    net::Uri::QueryParameters params;
+
+    return p->async_get<User>(
+        { "users", userid}, params,
+        [](const json::Value &root) {
+            auto results = get_typed_authuser_info<User>("user", root);
             return results;
     });
 }

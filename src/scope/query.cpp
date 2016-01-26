@@ -84,6 +84,44 @@ const static string SEARCH_CATEGORY_LOGIN_NAG = R"(
   }
 }
 )";
+
+const static string SHOW_EMPTY_TRACK_TIPS = R"(
+{
+  "schema-version": 1,
+  "template": {
+    "category-layout": "grid",
+    "card-size": "large",
+    "card-layout": "horizontal"
+  },
+  "components": {
+    "title": "title"
+  }
+}
+)";
+
+const static string USER_INFO_TEMPLATE = R"(
+{
+  "schema-version": 1,
+  "template": {
+    "category-layout": "grid",
+    "card-background": "color:///#FFFFFF",
+    "card-size": "medium",
+    "card-layout": "horizontal"
+  },
+  "components": {
+    "title": "title",
+    "art" : {
+       "field": "art"
+     },
+     "subtitle": "subtitle",
+     "attributes": {
+       "field": "attributes",
+       "max-count": 3
+    }
+  }
+}
+)";
+
 // unconfuse emacs: "
 
 static const vector<string> AUDIO_DEPARTMENT_IDS { "Audiobooks", "Business",
@@ -124,9 +162,15 @@ static T get_or_throw(future<T> &f) {
     return f.get();
 }
 
-static sc::Department::SPtr create_departments(const sc::CannedQuery &query) {
+static sc::Department::SPtr create_departments(const sc::CannedQuery &query,
+                                               bool contains_fav) {
     sc::Department::SPtr root_department = sc::Department::create("", query,
             MUSIC_DEPARTMENT_NAMES.front());
+    if (contains_fav) {
+        sc::Department::SPtr dept = sc::Department::create(
+                "my_fav", query, _("My favorites"));
+        root_department->add_subdepartment(dept);
+    }
     for (size_t i = 1; i < MUSIC_DEPARTMENT_IDS.size(); ++i) {
         sc::Department::SPtr dept = sc::Department::create(
                 MUSIC_DEPARTMENT_IDS[i], query, MUSIC_DEPARTMENT_NAMES[i]);
@@ -193,20 +237,30 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         const sc::CannedQuery &query(sc::SearchQueryBase::query());
         string query_string = alg::trim_copy(query.query_string());
 
-        reply->register_departments(create_departments(query));
+        bool authenticated = client_.authenticated();
+        sc::Department::SPtr root_depts = create_departments(query, authenticated);
+        reply->register_departments(root_depts);
 
         // Avoid blocking on HTTP requests at this point
 
         sc::Category::SCPtr first_cat;
+        sc::Category::SCPtr user_cat;
         future<deque<Track>> stream_future;
+        future<User> user_future;
         bool reading_stream = false;
+        bool reading_user_info = false;
         if (query_string.empty() && query.department_id().empty()) {
-            if (client_.authenticated()) {
+            if (authenticated) {
+                user_cat = reply->register_category("user", "", "",
+                        sc::CategoryRenderer(USER_INFO_TEMPLATE));
+                user_future = client_.get_authuser_info();
+
                 first_cat = reply->register_category(
                     "stream", _("Stream"), "",
                     sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
                 stream_future = client_.stream_tracks(30);
                 reading_stream = true;
+                reading_user_info = true;
             } else {
                 add_login_nag(reply);
             }
@@ -217,22 +271,45 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         if (query_string.empty()) {
             second_cat = reply->register_category("explore", _("Explore"), "",
                     sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
-            tracks_future = client_.search_tracks({
-                { SP::query, query_string },
-                { SP::limit, "15" },
-                { SP::genre, department_to_category(query.department_id()) },
-                { SP::order, "hotness" }
-            });
+            if (query.department_id() == "my_fav") {
+                tracks_future = client_.favorite_tracks();
+            } else {
+                tracks_future = client_.search_tracks({
+                    { SP::query, query_string },
+                    { SP::limit, "15" },
+                    { SP::genre, department_to_category(query.department_id()) },
+                    { SP::order, "hotness" }
+                });
+            }
         } else {
             second_cat = reply->register_category("search", "", "",
                     sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
-            tracks_future = client_.search_tracks( {
-                { SP::query, query_string },
-                { SP::limit, "30" }
-            });
+
+            std::string prefix("User::");
+            std::string userId;
+            if (!query_string.compare(0, prefix.size(), prefix)) {
+                user_cat = reply->register_category("user", "", "",
+                        sc::CategoryRenderer(USER_INFO_TEMPLATE));
+
+                userId = query_string.substr(prefix.size());
+                user_future = client_.get_user_info(userId);
+                tracks_future = client_.get_user_tracks(userId, 15);
+                reading_user_info = true;
+            } else {
+                tracks_future = client_.search_tracks( {
+                    { SP::query, query_string },
+                    { SP::limit, "30" }
+                });
+            }
         }
 
         // Now we come to wait for the results
+        if (reading_user_info) {
+            User user = get_or_throw(user_future);
+            if (!push_user_info(reply, user_cat, user)) {
+                return;
+            }
+        }
 
         if (reading_stream) {
             for (const auto &track : get_or_throw(stream_future)) {
@@ -242,8 +319,15 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             }
         }
 
-        for (const auto &track : get_or_throw(tracks_future)) {
+        deque<Track> tracklist = get_or_throw(tracks_future);
+        for (const auto &track : tracklist) {
             if (!push_track(reply, second_cat, track)) {
+                return;
+            }
+        }
+
+        if (tracklist.size() == 0) {
+            if (!show_empty_tip(reply)) {
                 return;
             }
         }
@@ -301,8 +385,63 @@ bool Query::push_track(const sc::SearchReplyProxy &reply,
     sc::VariantBuilder builder;
     builder.add_tuple({{"value", sc::Variant(duration)}});
     builder.add_tuple({{"value", sc::Variant(playback_count)}});
-    builder.add_tuple({{"value", sc::Variant(likes_count)}});
+
+    //favorite api doesn't contains likes_count field when retrieving auth user favorites list
+    //activity api doesn't contains favoritings_count field when retrieving stream list
+    if (track.likes_count() > 0)
+        builder.add_tuple({{"value", sc::Variant(likes_count)}});
+    else
+        builder.add_tuple({{"value", sc::Variant(favoritings_count)}});
+
     res["attributes"] = builder.end();
+
+    res["mode"] = _("track");
+
+    return reply->push(res);
+}
+
+bool Query::push_user_info(const sc::SearchReplyProxy &reply,
+                       const sc::Category::SCPtr &category,
+                       const User &user) {
+
+    sc::CategorisedResult res(category);
+
+    res.set_uri(user.permalink_url());
+    res.set_title(user.title());
+    res.set_art(user.artwork());
+    res["subtitle"] = user.permalink_url() + " "+ user.bio();
+
+    string track_count = "<b> "+ format_fixed(user.track_count()) + _("</b> tracks");
+    string followers_count = "<b> "+ format_fixed(user.followers_count()) + _("</b> followers");
+    string followings_count = "<b> "+ format_fixed(user.followings_count()) + _("</b> followings");
+    res["track-count"] = track_count;
+    res["followers-count"] = followers_count;
+    res["followings-count"] = followings_count;
+    res["permalink-url"] = user.permalink_url();
+    res["bio"] = user.bio();
+    res["id"] = std::to_string(user.id());
+
+    sc::VariantBuilder builder;
+    builder.add_tuple({{"value", sc::Variant(track_count)}});
+    builder.add_tuple({{"value", sc::Variant(followers_count)}});
+    builder.add_tuple({{"value", sc::Variant(followings_count)}});
+
+    res["attributes"] = builder.end();
+    res["mode"] = _("user");
+
+    return reply->push(res);
+}
+
+bool Query::show_empty_tip(const unity::scopes::SearchReplyProxy &reply)
+{
+    //Stay on surface and avoid user to enter card view if no tracks are found
+    const sc::CannedQuery &query(sc::SearchQueryBase::query());
+    sc::CategoryRenderer rdr(SHOW_EMPTY_TRACK_TIPS);
+    auto cat = reply->register_category("show_empty_tips", "", "", rdr);
+
+    sc::CategorisedResult res(cat);
+    res.set_uri(query.to_uri());
+    res.set_title(_("No tracks can be found"));
 
     return reply->push(res);
 }

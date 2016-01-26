@@ -68,7 +68,12 @@ public:
 
     virtual std::future<bool> post_comment(const std::string &trackid,
                                            const std::string &postmsg);
-    
+
+    virtual std::future<std::deque<Track>> favorite_tracks();
+
+    virtual std::future<std::deque<Track>> get_user_tracks(const std::string &userid,
+                                                           int limit = 0);
+
     virtual std::future<bool> is_fav_track(const std::string &trackid);
 
     virtual std::future<bool> like_track(const std::string &trackid);
@@ -80,6 +85,11 @@ public:
     virtual std::future<bool> follow_user(const std::string &userid);
 
     virtual std::future<bool> unfollow_user(const std::string &userid);
+
+    virtual std::future<User> get_authuser_info();
+
+    virtual std::future<User> get_user_info(const std::string &userid);
+
     /**
      * Cancel any pending queries (this method can be called from a different thread)
      */
