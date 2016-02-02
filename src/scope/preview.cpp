@@ -100,10 +100,12 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
                       {"label", sc::Variant(_("View in browser"))},
                       {"uri", sc::Variant(permalink_url)}
                   });
+                sc::CannedQuery new_query(SCOPE_NAME);
+                new_query.set_department_id("userid:" + userid);
                 builder.add_tuple({
-                      {"id", sc::Variant("get")},
-                      {"label", sc::Variant(_("Get my tracks"))},
-                      {"uri", sc::Variant("scope://com.ubuntu.scopes.soundcloud_soundcloud?q=User::" + userid)}
+                      {"id", sc::Variant("usertracks")},
+                      {"label", sc::Variant(_("Get user tracks"))},
+                      {"uri", sc::Variant(new_query.to_uri())}
                   });
             }
             actions.add_attribute_value("actions", builder.end());
@@ -214,10 +216,12 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
                       });
                 }
                 if (client_.authenticated()) {
+                    sc::CannedQuery new_query(SCOPE_NAME);
+                    new_query.set_department_id("userid:" + userid);
                     builder.add_tuple({
                           {"id", sc::Variant("usertracks")},
                           {"label", sc::Variant(_("Get user tracks"))},
-                          {"uri", sc::Variant("scope://com.ubuntu.scopes.soundcloud_soundcloud?q=User::" + userid)}
+                          {"uri", sc::Variant(new_query.to_uri())}
                       });
 
                     future<bool> like_future = client_.is_fav_track(trackid);

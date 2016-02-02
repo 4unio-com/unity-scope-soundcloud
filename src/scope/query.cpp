@@ -17,6 +17,7 @@
  *         Gary Wang  <gary.wang@canonical.com>
  */
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
 #include <scope/localization.h>
@@ -236,9 +237,18 @@ void Query::run(sc::SearchReplyProxy const& reply) {
     try {
         const sc::CannedQuery &query(sc::SearchQueryBase::query());
         string query_string = alg::trim_copy(query.query_string());
+        string department_id = query.department_id();
 
         bool authenticated = client_.authenticated();
         sc::Department::SPtr root_depts = create_departments(query, authenticated);
+
+        bool is_dummy_depts = alg::starts_with(department_id, "userid:");
+        if (is_dummy_depts) {
+            sc::Department::SPtr dummy = sc::Department::create(
+                            department_id, query, " ");
+            root_depts->add_subdepartment(dummy);
+        }
+
         reply->register_departments(root_depts);
 
         // Avoid blocking on HTTP requests at this point
@@ -249,7 +259,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         future<User> user_future;
         bool reading_stream = false;
         bool reading_user_info = false;
-        if (query_string.empty() && query.department_id().empty()) {
+        if (query_string.empty() && department_id.empty()) {
             if (authenticated) {
                 user_cat = reply->register_category("user", "", "",
                         sc::CategoryRenderer(USER_INFO_TEMPLATE));
@@ -271,13 +281,22 @@ void Query::run(sc::SearchReplyProxy const& reply) {
         if (query_string.empty()) {
             second_cat = reply->register_category("explore", _("Explore"), "",
                     sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
-            if (query.department_id() == "my_fav") {
+            if (department_id == "my_fav") {
                 tracks_future = client_.favorite_tracks();
+            } else if (is_dummy_depts) {
+                //create dummy department to pass the validation check
+                user_cat = reply->register_category("user", "", "",
+                        sc::CategoryRenderer(USER_INFO_TEMPLATE));
+
+                string userId = department_id.substr(department_id.find(':') + 1);
+                user_future = client_.get_user_info(userId);
+                tracks_future = client_.get_user_tracks(userId, 15);
+                reading_user_info = true;
             } else {
                 tracks_future = client_.search_tracks({
                     { SP::query, query_string },
                     { SP::limit, "15" },
-                    { SP::genre, department_to_category(query.department_id()) },
+                    { SP::genre, department_to_category(department_id) },
                     { SP::order, "hotness" }
                 });
             }
@@ -285,22 +304,10 @@ void Query::run(sc::SearchReplyProxy const& reply) {
             second_cat = reply->register_category("search", "", "",
                     sc::CategoryRenderer(SEARCH_CATEGORY_TEMPLATE));
 
-            std::string prefix("User::");
-            std::string userId;
-            if (!query_string.compare(0, prefix.size(), prefix)) {
-                user_cat = reply->register_category("user", "", "",
-                        sc::CategoryRenderer(USER_INFO_TEMPLATE));
-
-                userId = query_string.substr(prefix.size());
-                user_future = client_.get_user_info(userId);
-                tracks_future = client_.get_user_tracks(userId, 15);
-                reading_user_info = true;
-            } else {
-                tracks_future = client_.search_tracks( {
-                    { SP::query, query_string },
-                    { SP::limit, "30" }
-                });
-            }
+            tracks_future = client_.search_tracks( {
+                 { SP::query, query_string },
+                 { SP::limit, "30" }
+            });
         }
 
         // Now we come to wait for the results
