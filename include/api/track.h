@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Pete Woods <pete.woods@canonical.com>
+ *         Gary Wang  <gary.wang@canonical.com>
  */
 
 #ifndef API_TRACK_H_
@@ -76,6 +77,16 @@ public:
 
     unsigned int favoritings_count() const;
 
+    unsigned int comment_count() const;
+
+    unsigned int repost_count() const;
+
+    unsigned int likes_count() const;
+
+    const std::string & genre() const;
+
+    const std::string & original_format() const;
+
     const User & user() const;
 
     Kind kind() const override;
@@ -120,6 +131,16 @@ protected:
     unsigned int playback_count_;
 
     unsigned int favoritings_count_;
+
+    unsigned int comment_count_;
+
+    unsigned int repost_count_;
+
+    unsigned int likes_count_;
+
+    std::string genre_;
+
+    std::string original_format_;
 
     User user_;
 };

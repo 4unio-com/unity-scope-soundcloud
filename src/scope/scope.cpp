@@ -14,12 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Pete Woods <pete.woods@canonical.com>
+ *         Gary Wang  <gary.wang@canonical.com>
  */
 
 #include <scope/localization.h>
 #include <scope/preview.h>
 #include <scope/query.h>
 #include <scope/scope.h>
+#include <scope/activation.h>
 
 namespace sc = unity::scopes;
 using namespace std;
@@ -48,7 +50,14 @@ sc::SearchQueryBase::UPtr Scope::search(const sc::CannedQuery &query,
 
 sc::PreviewQueryBase::UPtr Scope::preview(sc::Result const& result,
                                           sc::ActionMetadata const& metadata) {
-    return sc::PreviewQueryBase::UPtr(new Preview(result, metadata));
+    return sc::PreviewQueryBase::UPtr(new Preview(result, metadata, oa_client_));
+}
+
+sc::ActivationQueryBase::UPtr Scope::perform_action(const sc::Result &result,
+                                                 const sc::ActionMetadata &metadata,
+                                                 const std::string &widget_id,
+                                                 const std::string &action_id) {
+    return sc::ActivationQueryBase::UPtr(new Activation(result, metadata, action_id, oa_client_));
 }
 
 #define EXPORT __attribute__ ((visibility ("default")))

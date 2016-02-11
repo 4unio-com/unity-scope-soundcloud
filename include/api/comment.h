@@ -14,12 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Pete Woods <pete.woods@canonical.com>
+ *         Gary Wang  <gary.wang@canonical.com>
  */
 
-#ifndef API_USER_H_
-#define API_USER_H_
+#ifndef API_COMMENT_H_
+#define API_COMMENT_H_
 
-#include <api/resource.h>
+#include <api/user.h>
 
 #include <memory>
 #include <string>
@@ -30,52 +31,40 @@ class Value;
 
 namespace api {
 
-class User: public Resource {
+class Comment: public Resource {
 public:
-    typedef std::shared_ptr<User> Ptr;
+    typedef std::shared_ptr<Comment> Ptr;
 
-    User(const Json::Value &data);
+    Comment(const Json::Value &data);
 
-    virtual ~User() = default;
+    virtual ~Comment() = default;
+
+    const unsigned int & id() const override;
 
     const std::string & title() const override;
 
     const std::string & artwork() const override;
 
-    const unsigned int & id() const override;
+    const std::string & body() const;
 
-    const std::string & permalink_url() const;
-
-    const unsigned int & track_count() const;
-
-    const unsigned int & followers_count() const;
-
-    const unsigned int & followings_count() const;
-
-    const std::string & bio() const;
+    const std::string & created_at() const;
+    
+    const User & user() const;
 
     Kind kind() const override;
 
     std::string kind_str() const override;
 
 protected:
-    std::string title_;
+    std::string body_;
 
+    std::string created_at_;
+    
     unsigned int id_;
-
-    std::string artwork_;
-
-    std::string permalink_;
-
-    unsigned int track_count_;
-
-    unsigned int followers_count_;
-
-    unsigned int followings_count_;
-
-    std::string bio_;
+    
+    User user_;
 };
 
 }
 
-#endif // API_USER_H_
+#endif // API_COMMENT_H_

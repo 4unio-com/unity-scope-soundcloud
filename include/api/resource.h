@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Pete Woods <pete.woods@canonical.com>
+ *         Gary Wang  <gary.wang@canonical.com>
  */
 
 #ifndef API_RESOURCE_H_
@@ -27,7 +28,7 @@ namespace api {
 class Resource {
 public:
     enum class Kind {
-        track, user
+        track, user, comment,
     };
 
     typedef std::shared_ptr<Resource> Ptr;

@@ -51,6 +51,12 @@ private:
                     const unity::scopes::Category::SCPtr &category,
                     const api::Track &track);
 
+    bool push_user_info(const unity::scopes::SearchReplyProxy &reply,
+                           const unity::scopes::Category::SCPtr &category,
+                           const api::User &user);
+
+    bool show_empty_tip(const unity::scopes::SearchReplyProxy &reply);
+
     api::Client client_;
 };
 

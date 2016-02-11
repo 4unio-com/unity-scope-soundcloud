@@ -28,6 +28,11 @@ User::User(const json::Value &data) {
     title_ = data["username"].asString();
     id_ = data["id"].asUInt();
     artwork_ = data["avatar_url"].asString();
+    permalink_ = data["permalink_url"].asString();
+    track_count_ = data["track_count"].asUInt();
+    followers_count_ = data["followers_count"].asUInt();
+    followings_count_ = data["followings_count"].asUInt();
+    bio_ = data["description"].asString();
 }
 
 const string & User::title() const {
@@ -36,6 +41,31 @@ const string & User::title() const {
 
 const unsigned int & User::id() const {
     return id_;
+}
+
+const string &User::permalink_url() const
+{
+    return permalink_;
+}
+
+const unsigned int &User::track_count() const
+{
+    return track_count_;
+}
+
+const unsigned int &User::followers_count() const
+{
+    return followers_count_;
+}
+
+const unsigned int &User::followings_count() const
+{
+    return followings_count_;
+}
+
+const string &User::bio() const
+{
+    return bio_;
 }
 
 const string & User::artwork() const {
