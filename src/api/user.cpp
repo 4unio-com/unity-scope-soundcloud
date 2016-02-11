@@ -43,22 +43,22 @@ const unsigned int & User::id() const {
     return id_;
 }
 
-const string &User::permalink_url() const
+const string & User::permalink_url() const
 {
     return permalink_;
 }
 
-const unsigned int &User::track_count() const
+unsigned int User::track_count() const
 {
     return track_count_;
 }
 
-const unsigned int &User::followers_count() const
+unsigned int User::followers_count() const
 {
     return followers_count_;
 }
 
-const unsigned int &User::followings_count() const
+unsigned int User::followings_count() const
 {
     return followings_count_;
 }

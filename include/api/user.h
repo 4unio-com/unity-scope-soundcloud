@@ -46,11 +46,11 @@ public:
 
     const std::string & permalink_url() const;
 
-    const unsigned int & track_count() const;
+    unsigned int track_count() const;
 
-    const unsigned int & followers_count() const;
+    unsigned int followers_count() const;
 
-    const unsigned int & followings_count() const;
+    unsigned int followings_count() const;
 
     const std::string & bio() const;
 
