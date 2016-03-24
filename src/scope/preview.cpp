@@ -75,6 +75,10 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
             boost::replace_all(artwork_url, "large", "t500x500");
             sc::PreviewWidget art("art", "image");
             art.add_attribute_value("source", sc::Variant(artwork_url));
+            sc::VariantMap share_data;
+            share_data["uri"] = res["art"];
+            share_data["content-type"] = sc::Variant("pictures");
+            art.add_attribute_value("share-data", sc::Variant(share_data));
             widgets.emplace_back(art);
 
             sc::PreviewWidget statistics("statistics", "header");
@@ -123,6 +127,10 @@ void Preview::run(sc::PreviewReplyProxy const& reply) {
             boost::replace_all(artwork_url, "large", "t500x500");
             sc::PreviewWidget art("art", "image");
             art.add_attribute_value("source", sc::Variant(artwork_url));
+            sc::VariantMap share_data;
+            share_data["uri"] = res["art"];
+            share_data["content-type"] = sc::Variant("pictures");
+            art.add_attribute_value("share-data", sc::Variant(share_data));
             widgets.emplace_back(art);
 
             sc::PreviewWidget statistics("statistics", "header");
